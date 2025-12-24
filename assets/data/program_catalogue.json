@@ -1,0 +1,134 @@
+{
+  "version": "1.1",
+  "programs": [
+    {
+      "programId": "money_safety_7d",
+      "title": "Money Safety Reset",
+      "durationDays": 7,
+      "track": "money",
+      "isSupportProgram": false,
+      "proOnly": false,
+      "shortDescription": "Calms financial stress and rebuilds a sense of safety around money.",
+      "recommendedNextPrograms": [
+        "money_attachment_14d",
+        "wealth_identity_30d"
+      ]
+    },
+    {
+      "programId": "nervous_system_14d",
+      "title": "Calm Nervous System",
+      "durationDays": 14,
+      "track": "health",
+      "isSupportProgram": false,
+      "proOnly": false,
+      "shortDescription": "Reduces chronic stress and helps your body return to a regulated baseline.",
+      "recommendedNextPrograms": [
+        "health_consistency_21d",
+        "outcome_soothing_7d"
+      ]
+    },
+    {
+      "programId": "confidence_self_concept_21d",
+      "title": "Confidence & Self-Concept",
+      "durationDays": 21,
+      "track": "confidence",
+      "isSupportProgram": false,
+      "proOnly": false,
+      "shortDescription": "Rebuilds self-trust, boundaries, and a stable inner identity.",
+      "recommendedNextPrograms": [
+        "love_readiness_21d",
+        "purpose_reset_14d"
+      ]
+    },
+    {
+      "programId": "love_readiness_21d",
+      "title": "Love Readiness",
+      "durationDays": 21,
+      "track": "love",
+      "isSupportProgram": false,
+      "proOnly": false,
+      "shortDescription": "Prepares you emotionally and psychologically for healthy connection.",
+      "recommendedNextPrograms": [
+        "love_attachment_14d",
+        "confidence_self_concept_21d"
+      ]
+    },
+    {
+      "programId": "health_consistency_21d",
+      "title": "Health Consistency Builder",
+      "durationDays": 21,
+      "track": "health",
+      "isSupportProgram": false,
+      "proOnly": false,
+      "shortDescription": "Builds sustainable health routines without pressure or burnout.",
+      "recommendedNextPrograms": [
+        "nervous_system_14d",
+        "confidence_self_concept_21d"
+      ]
+    },
+    {
+      "programId": "wealth_identity_30d",
+      "title": "Wealth Identity Deepening",
+      "durationDays": 30,
+      "track": "wealth",
+      "isSupportProgram": false,
+      "proOnly": false,
+      "shortDescription": "Shifts long-term beliefs and identity around wealth and value.",
+      "recommendedNextPrograms": [
+        "money_attachment_14d",
+        "purpose_reset_14d"
+      ]
+    },
+    {
+      "programId": "purpose_reset_14d",
+      "title": "Purpose & Direction Reset",
+      "durationDays": 14,
+      "track": "confidence",
+      "isSupportProgram": false,
+      "proOnly": false,
+      "shortDescription": "Helps clarify direction, priorities, and next personal chapter.",
+      "recommendedNextPrograms": [
+        "confidence_self_concept_21d",
+        "wealth_identity_30d"
+      ]
+    },
+    {
+      "programId": "outcome_soothing_7d",
+      "title": "Outcome Soothing Reset",
+      "durationDays": 7,
+      "track": "support",
+      "isSupportProgram": true,
+      "proOnly": false,
+      "shortDescription": "Reduces urgency, obsession, and emotional over-investment in outcomes.",
+      "recommendedNextPrograms": [
+        "money_safety_7d",
+        "love_readiness_21d"
+      ]
+    },
+    {
+      "programId": "money_attachment_14d",
+      "title": "Money Attachment Softening",
+      "durationDays": 14,
+      "track": "money",
+      "isSupportProgram": true,
+      "proOnly": false,
+      "shortDescription": "Eases fear, scarcity thinking, and emotional charge around money.",
+      "recommendedNextPrograms": [
+        "wealth_identity_30d"
+      ]
+    },
+    {
+      "programId": "love_attachment_14d",
+      "title": "Love Attachment Softening",
+      "durationDays": 14,
+      "track": "love",
+      "isSupportProgram": true,
+      "proOnly": false,
+      "shortDescription": "Reduces anxiety, fixation, and emotional dependency in relationships.",
+      "recommendedNextPrograms": [
+        "love_readiness_21d",
+        "confidence_self_concept_21d"
+      ]
+    }
+  ]
+}
