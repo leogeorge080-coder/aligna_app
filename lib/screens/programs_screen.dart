@@ -5,11 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/program_catalogue_loader.dart';
 import '../models/program_catalogue_item.dart';
 import '../persistence/prefs.dart';
+import '../providers/app_providers.dart';
 
 class ProgramsScreen extends ConsumerStatefulWidget {
-  const ProgramsScreen({super.key, required this.onOpenCoach});
-
-  final VoidCallback onOpenCoach;
+  const ProgramsScreen({super.key});
 
   @override
   ConsumerState<ProgramsScreen> createState() => _ProgramsScreenState();
@@ -54,110 +53,109 @@ class _ProgramsScreenState extends ConsumerState<ProgramsScreen> {
           final items = (snap.data ?? [])
             ..sort((a, b) => a.durationDays.compareTo(b.durationDays));
 
-          return FutureBuilder<String?>(
-            future: Prefs.loadActiveProgramId(),
-            builder: (context, activeSnap) {
-              final activeId = activeSnap.data;
+          final activeId = ref.watch(activeProgramIdProvider);
 
-              final active = activeId == null
-                  ? null
-                  : items
-                        .where((p) => p.programId == activeId)
-                        .cast<ProgramCatalogueItem?>()
-                        .firstOrNull;
+          final active = activeId == null
+              ? null
+              : items
+                    .where((p) => p.programId == activeId)
+                    .cast<ProgramCatalogueItem?>()
+                    .firstOrNull;
 
-              // Tabs (track filter)
-              // Note: keep compatibility with older track naming:
-              // - "identity" might be used in older catalogue for confidence/self-concept.
-              final tracks = const [
-                ('money', 'Money'),
-                ('wealth', 'Wealth'),
-                ('love', 'Love'),
-                ('health', 'Health'),
-                ('confidence', 'Confidence'),
-                ('support', 'Support'),
-                ('purpose', 'Purpose'),
-              ];
+          // Tabs (track filter)
+          // Note: keep compatibility with older track naming:
+          // - "identity" might be used in older catalogue for confidence/self-concept.
+          final tracks = const [
+            ('money', 'Money'),
+            ('wealth', 'Wealth'),
+            ('love', 'Love'),
+            ('health', 'Health'),
+            ('confidence', 'Confidence'),
+            ('support', 'Support'),
+            ('purpose', 'Purpose'),
+          ];
 
-              bool _matchesTab(ProgramCatalogueItem p) {
-                final t = p.track;
+          bool _matchesTab(ProgramCatalogueItem p) {
+            final t = p.track;
 
-                switch (_tab) {
-                  case 'confidence':
-                    // Support both "confidence" and legacy "identity"
-                    return t == 'confidence' || t == 'identity';
-                  default:
-                    return t == _tab;
-                }
-              }
+            switch (_tab) {
+              case 'confidence':
+                // Support both "confidence" and legacy "identity"
+                return t == 'confidence' || t == 'identity';
+              default:
+                return t == _tab;
+            }
+          }
 
-              final filtered = items.where(_matchesTab).toList()
-                ..sort((a, b) => a.durationDays.compareTo(b.durationDays));
+          final filtered = items.where(_matchesTab).toList()
+            ..sort((a, b) => a.durationDays.compareTo(b.durationDays));
 
-              return ListView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                children: [
-                  if (activeId != null) ...[
-                    _ActiveProgramCard(
-                      active: active,
-                      activeId: activeId,
-                      onResume: () => widget.onOpenCoach(),
-                      onClear: () async {
-                        await Prefs.clearActiveProgramId();
-                        if (mounted) setState(() {});
-                      },
-                    ),
-                    const SizedBox(height: 14),
-                  ],
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            children: [
+              if (activeId != null) ...[
+                _ActiveProgramCard(
+                  active: active,
+                  activeId: activeId,
+                  onResume: () =>
+                      ref.read(shellTabIndexProvider.notifier).state = 0,
+                  onClear: () async {
+                    await Prefs.clearActiveProgramId();
+                    ref.read(activeProgramIdProvider.notifier).state = null;
+                    if (mounted) setState(() {});
+                  },
+                ),
+                const SizedBox(height: 14),
+              ],
 
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        for (final (key, label) in tracks)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: ChoiceChip(
-                              selected: _tab == key,
-                              label: Text(label),
-                              onSelected: (_) => setState(() => _tab = key),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  if (filtered.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 24),
-                      child: Text(
-                        'No programs in this track yet.',
-                        style: Theme.of(context).textTheme.bodyMedium,
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (final (key, label) in tracks)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          selected: _tab == key,
+                          label: Text(label),
+                          onSelected: (_) => setState(() => _tab = key),
+                        ),
                       ),
-                    ),
-
-                  for (final p in filtered) ...[
-                    _ProgramTile(
-                      p: p,
-                      isActive: p.programId == activeId,
-                      onPick: () async {
-                        await Prefs.setActiveProgramId(p.programId);
-                        if (mounted) {
-                          setState(() {});
-                          widget.onOpenCoach(); // jump to coach tab
-                        }
-                      },
-                    ),
-                    const Divider(height: 1),
                   ],
-                ],
-              );
-            },
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              if (filtered.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 24),
+                  child: Text(
+                    'No programs in this track yet.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ),
+
+              for (final p in filtered) ...[
+                _ProgramTile(
+                  p: p,
+                  isActive: p.programId == activeId,
+                  onPick: () => _selectProgram(p.programId),
+                ),
+                const Divider(height: 1),
+              ],
+            ],
           );
         },
       ),
     );
+  }
+
+  Future<void> _selectProgram(String programId) async {
+    await Prefs.setActiveProgramId(programId);
+    ref.read(activeProgramIdProvider.notifier).state = programId;
+
+    // Go back to Coach tab immediately (nice handoff)
+    ref.read(shellTabIndexProvider.notifier).state = 0;
   }
 }
 

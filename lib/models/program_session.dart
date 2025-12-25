@@ -28,6 +28,9 @@ class ProgramSession {
   /// Resume copy for gentle continuation.
   final ResumeCopy resumeCopy;
 
+  /// Optional LLM prompt key for dynamic content.
+  final String? llmPromptKey;
+
   const ProgramSession({
     required this.programId,
     required this.day,
@@ -38,6 +41,7 @@ class ProgramSession {
     required this.microAction,
     required this.reflection,
     required this.resumeCopy,
+    this.llmPromptKey,
   });
 }
 

@@ -1,0 +1,577 @@
+{
+  "schemaVersion": "1.0",
+  "programId": "health_consistency_21d",
+  "title": "Health Consistency Builder",
+  "durationDays": 21,
+  "track": "health",
+  "proOnly": false,
+  "days": [
+    {
+      "day": 1,
+      "blocks": [
+        {
+          "id": "day1_opening",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "This program is about steadiness, not intensity.",
+              "Health grows through consistency."
+            ],
+            "stressed": [
+              "We’re not fixing health today.",
+              "We’re creating safety around it."
+            ],
+            "tired_busy": [
+              "Nothing new is required today.",
+              "Just allow this idea in."
+            ],
+            "curious": [
+              "Consistency is an identity, not a routine.",
+              "Let’s explore that."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 2,
+      "blocks": [
+        {
+          "id": "day2_pressure",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Pressure weakens consistency.",
+              "Notice where health feels pressured."
+            ],
+            "stressed": [
+              "Health pressure creates avoidance.",
+              "We soften that today."
+            ],
+            "tired_busy": [
+              "You don’t need to improve today.",
+              "Just observe."
+            ],
+            "curious": [
+              "Explore how pressure affects your health habits.",
+              "Awareness reduces it."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 3,
+      "blocks": [
+        {
+          "id": "day3_minimum",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Consistency starts with the minimum.",
+              "Less is sustainable."
+            ],
+            "stressed": [
+              "You don’t need big health actions.",
+              "Small consistency is safer."
+            ],
+            "tired_busy": [
+              "The minimum counts today.",
+              "Even rest."
+            ],
+            "curious": [
+              "Notice how reducing effort increases follow-through.",
+              "This matters."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 4,
+      "blocks": [
+        {
+          "id": "day4_body",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Health consistency listens to the body.",
+              "Not rules."
+            ],
+            "stressed": [
+              "Ignoring your body creates burnout.",
+              "Listening restores trust."
+            ],
+            "tired_busy": [
+              "Your body doesn’t need correction today.",
+              "Just presence."
+            ],
+            "curious": [
+              "Explore how listening changes health decisions.",
+              "Identity shifts here."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 5,
+      "blocks": [
+        {
+          "id": "day5_identity",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Consistency comes from identity.",
+              "Not motivation."
+            ],
+            "stressed": [
+              "Motivation fluctuates.",
+              "Identity stabilizes."
+            ],
+            "tired_busy": [
+              "You don’t need motivation today.",
+              "Just alignment."
+            ],
+            "curious": [
+              "Notice how identity-based health feels.",
+              "This is durable."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 6,
+      "blocks": [
+        {
+          "id": "day6_rest",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Rest is part of consistency.",
+              "Not a break from it."
+            ],
+            "stressed": [
+              "Skipping rest weakens health routines.",
+              "Let rest count."
+            ],
+            "tired_busy": [
+              "Today may already be rest.",
+              "That’s enough."
+            ],
+            "curious": [
+              "Explore rest as a health skill.",
+              "This is foundational."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 7,
+      "blocks": [
+        {
+          "id": "day7_week1",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Week one builds safety.",
+              "Notice reduced pressure."
+            ],
+            "stressed": [
+              "Consistency begins with safety.",
+              "You’ve done enough."
+            ],
+            "tired_busy": [
+              "Completion doesn’t need effort.",
+              "Just acknowledgment."
+            ],
+            "curious": [
+              "Reflect lightly on this first phase.",
+              "Identity is forming."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 8,
+      "blocks": [
+        {
+          "id": "day8_expectations",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Expectations disrupt consistency.",
+              "Notice unrealistic ones."
+            ],
+            "stressed": [
+              "Health doesn’t need perfection.",
+              "Release that demand."
+            ],
+            "tired_busy": [
+              "You don’t need to meet expectations today.",
+              "Just exist."
+            ],
+            "curious": [
+              "Explore how expectations shape habits.",
+              "Awareness softens them."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 9,
+      "blocks": [
+        {
+          "id": "day9_compassion",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Compassion sustains consistency.",
+              "Harshness breaks it."
+            ],
+            "stressed": [
+              "Self-criticism reduces follow-through.",
+              "Compassion restores it."
+            ],
+            "tired_busy": [
+              "You don’t need correction today.",
+              "Kindness is enough."
+            ],
+            "curious": [
+              "Notice how compassion affects health behavior.",
+              "This is key."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 10,
+      "blocks": [
+        {
+          "id": "day10_time",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Consistency works with time, not against it.",
+              "Slower is steadier."
+            ],
+            "stressed": [
+              "Rushing health creates resistance.",
+              "Slow down."
+            ],
+            "tired_busy": [
+              "You don’t need more time today.",
+              "Just less pressure."
+            ],
+            "curious": [
+              "Explore time as an ally in health.",
+              "This reframes effort."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 11,
+      "blocks": [
+        {
+          "id": "day11_environment",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Environment supports consistency.",
+              "Not willpower."
+            ],
+            "stressed": [
+              "If health feels hard, look at surroundings.",
+              "Not discipline."
+            ],
+            "tired_busy": [
+              "You don’t need to change anything today.",
+              "Just notice support."
+            ],
+            "curious": [
+              "Observe how environment affects habits.",
+              "Identity adapts here."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 12,
+      "blocks": [
+        {
+          "id": "day12_setbacks",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Setbacks don’t break consistency.",
+              "Response matters more."
+            ],
+            "stressed": [
+              "Missing a day isn’t failure.",
+              "Returning calmly is success."
+            ],
+            "tired_busy": [
+              "No need to recover today.",
+              "Just continue when ready."
+            ],
+            "curious": [
+              "Notice how you relate to setbacks.",
+              "Identity shows here."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 13,
+      "blocks": [
+        {
+          "id": "day13_trust",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Health consistency builds self-trust.",
+              "Notice that."
+            ],
+            "stressed": [
+              "Trust grows from showing up gently.",
+              "Not pushing."
+            ],
+            "tired_busy": [
+              "Trust doesn’t need proof today.",
+              "Just acknowledgment."
+            ],
+            "curious": [
+              "Explore how trust supports consistency.",
+              "This stabilizes habits."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 14,
+      "blocks": [
+        {
+          "id": "day14_midpoint",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "You’re halfway through.",
+              "Notice what feels steadier."
+            ],
+            "stressed": [
+              "Consistency grows quietly.",
+              "Even if unnoticed."
+            ],
+            "tired_busy": [
+              "Midpoint requires nothing.",
+              "Just presence."
+            ],
+            "curious": [
+              "Observe subtle identity shifts.",
+              "They matter."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 15,
+      "blocks": [
+        {
+          "id": "day15_energy",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Consistency supports energy.",
+              "Not exhaustion."
+            ],
+            "stressed": [
+              "Health isn’t about pushing energy.",
+              "It’s about preserving it."
+            ],
+            "tired_busy": [
+              "Energy can be protected today.",
+              "That’s enough."
+            ],
+            "curious": [
+              "Notice how consistency affects energy.",
+              "This reinforces habits."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 16,
+      "blocks": [
+        {
+          "id": "day16_boundaries",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Boundaries support health consistency.",
+              "Notice where they help."
+            ],
+            "stressed": [
+              "Without boundaries, health erodes.",
+              "Soft limits restore it."
+            ],
+            "tired_busy": [
+              "You don’t need new boundaries today.",
+              "Just awareness."
+            ],
+            "curious": [
+              "Explore boundaries as health support.",
+              "This is stabilizing."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 17,
+      "blocks": [
+        {
+          "id": "day17_balance",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Consistency values balance.",
+              "Not extremes."
+            ],
+            "stressed": [
+              "Extreme health swings create burnout.",
+              "Balance restores sustainability."
+            ],
+            "tired_busy": [
+              "Balance can be subtle today.",
+              "That’s enough."
+            ],
+            "curious": [
+              "Observe how balance affects follow-through.",
+              "Identity matures here."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 18,
+      "blocks": [
+        {
+          "id": "day18_flexibility",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Flexibility keeps consistency alive.",
+              "Rigid rules break it."
+            ],
+            "stressed": [
+              "Health adapts to life.",
+              "Not the other way around."
+            ],
+            "tired_busy": [
+              "You don’t need structure today.",
+              "Flexibility counts."
+            ],
+            "curious": [
+              "Explore flexibility as strength.",
+              "This is sustainable health."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 19,
+      "blocks": [
+        {
+          "id": "day19_integration",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Health consistency is integrating.",
+              "Notice the ease."
+            ],
+            "stressed": [
+              "Less friction means progress.",
+              "Even if subtle."
+            ],
+            "tired_busy": [
+              "Integration doesn’t need effort.",
+              "Just presence."
+            ],
+            "curious": [
+              "Observe how habits feel now.",
+              "Identity has shifted."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 20,
+      "blocks": [
+        {
+          "id": "day20_future",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Consistency supports future health.",
+              "Without urgency."
+            ],
+            "stressed": [
+              "You don’t need to secure health today.",
+              "Trust the process."
+            ],
+            "tired_busy": [
+              "The future doesn’t need planning today.",
+              "Rest here."
+            ],
+            "curious": [
+              "Notice how consistency changes future thinking.",
+              "This is grounding."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 21,
+      "blocks": [
+        {
+          "id": "day21_completion",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "This completes Health Consistency Builder.",
+              "Notice what feels more stable."
+            ],
+            "stressed": [
+              "Consistency is now a baseline.",
+              "You can return to it."
+            ],
+            "tired_busy": [
+              "Quiet completion is enough.",
+              "You’ve done this."
+            ],
+            "curious": [
+              "Reflect on how health consistency feels now.",
+              "This identity continues."
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

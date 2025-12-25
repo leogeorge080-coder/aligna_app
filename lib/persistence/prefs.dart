@@ -87,10 +87,10 @@ class Prefs {
     final bucket = (h >= 5 && h < 12)
         ? 'morning'
         : (h >= 12 && h < 17)
-            ? 'afternoon'
-            : (h >= 17 && h < 21)
-                ? 'evening'
-                : 'night';
+        ? 'afternoon'
+        : (h >= 17 && h < 21)
+        ? 'evening'
+        : 'night';
 
     return '${bucket}_$dayKey';
   }

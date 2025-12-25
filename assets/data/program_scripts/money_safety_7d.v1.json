@@ -1,794 +1,199 @@
 {
   "schemaVersion": "1.0",
   "programId": "money_safety_7d",
-  "scriptVersion": "1.0",
-  "language": "en",
-
   "title": "Money Safety Reset",
   "durationDays": 7,
   "track": "money",
-  "isSupportProgram": false,
-  "proOnly": true,
-
-  "doctrine": {
-    "version": "1.0",
-    "stance": "grounded_manifestation",
-    "notes": [
-      "No supernatural causation claims.",
-      "No outcome guarantees.",
-      "Embodiment framed as regulation and attention training."
-    ]
-  },
-
+  "proOnly": false,
   "days": [
     {
       "day": 1,
-      "internalPhase": "stabilise",
-      "morning": {
-        "estimatedMinutes": 2,
-        "intent": "identity_priming_or_calming",
-        "messagesByMood": {
-          "fine": [
-            "Today we start with money safety: the feeling that you’re okay, regardless of numbers.",
-            "Your worth isn’t tied to your bank balance. We’ll practice that first.",
-            "One sentence to hold: “I’m safe enough to think clearly about money.”"
-          ],
-          "stressed": [
-            "If money stress is high today, we don’t solve it—we calm the system reacting to it.",
-            "You can care about money without letting it dominate your day.",
-            "One sentence to hold: “My nervous system comes first.”"
-          ],
-          "tired_busy": [
-            "We’ll keep this simple: no budgeting, no big decisions.",
-            "Just one small reset for your relationship with money.",
-            "One sentence to hold: “Money is a tool, not a threat.”"
-          ],
-          "curious": [
-            "Money safety is a skill: feeling secure even when finances feel uncertain.",
-            "It starts with regulation, not more information.",
-            "One sentence to hold: “Security is internal first.”"
-          ]
-        },
-        "microAction": {
-          "title": "Money Pause",
-          "instruction": "Look at one financial number (account balance, bill amount). Then say: “This is data, not danger.”",
-          "durationSeconds": 30,
-          "isOptional": false
+      "blocks": [
+        {
+          "blockId": "day1_opening",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Welcome. Today we’ll gently create a sense of safety around money.",
+              "There’s nothing to fix right now. Just noticing is enough."
+            ],
+            "stressed": [
+              "Money can feel heavy. Today is about softening that pressure.",
+              "We’re not solving anything yet — we’re creating safety first."
+            ],
+            "tired_busy": [
+              "We’ll keep this very light today.",
+              "Just reading this is already enough."
+            ],
+            "curious": [
+              "Today begins a calmer relationship with money.",
+              "Let’s start by reducing urgency."
+            ]
+          }
         }
-      },
-      "day_optional": {
-        "estimatedMinutes": 1,
-        "intent": "micro_alignment",
-        "messagesByMood": {
-          "fine": [
-            "Optional: notice if you avoid looking at money. That’s understandable—curiosity is the antidote."
-          ],
-          "stressed": [
-            "Optional: if money thoughts spike, place a hand on your chest and breathe once."
-          ],
-          "tired_busy": [
-            "Optional: postpone one money-related task by 10 minutes. Use the time to breathe."
-          ],
-          "curious": [
-            "Optional: list one thing money does well for you. Focus on the positive data."
-          ]
-        },
-        "microAction": {
-          "title": "Positive Money Note",
-          "instruction": "Write one sentence about what money enables in your life. Keep it factual.",
-          "durationSeconds": 45,
-          "isOptional": true
-        }
-      },
-      "evening": {
-        "estimatedMinutes": 3,
-        "intent": "release_reflection_integration",
-        "messagesByMood": {
-          "fine": [
-            "Tonight we release the day’s financial grip. You don’t need to control every variable.",
-            "Rest comes before results.",
-            "End with: “I can rest without financial permission.”"
-          ],
-          "stressed": [
-            "Your mind protects you by focusing on money threats. That’s evolution, not weakness.",
-            "Tonight, we let your body know it’s safe to soften.",
-            "End with: “I’m allowed to be secure without certainty.”"
-          ],
-          "tired_busy": [
-            "You showed up despite the busyness. That’s progress.",
-            "Money stress often hides in fatigue. Let it surface and release.",
-            "End with: “I release what I can’t control tonight.”"
-          ],
-          "curious": [
-            "Notice how money thoughts loop when you’re tired. Rest interrupts the loop.",
-            "That’s how safety builds.",
-            "End with: “Rest is my reset.”"
-          ]
-        },
-        "reflection": {
-          "prompt": "Where did money feel like a threat today? What would ‘safety’ look like in one small way tomorrow?",
-          "exampleAnswers": [
-            "Checking balances repeatedly. Tomorrow I’ll check once at a set time.",
-            "Avoiding bills. Tomorrow I’ll open one and breathe through it.",
-            "Worrying about spending. Tomorrow I’ll spend on one small supportive thing."
-          ]
-        }
-      },
-      "resumeCopy": {
-        "neutral": "Welcome back. We’ll continue from today—no catching up needed.",
-        "warm": "Good to have you here. We’ll pick up gently from today."
-      }
+      ]
     },
     {
       "day": 2,
-      "internalPhase": "stabilise",
-      "morning": {
-        "estimatedMinutes": 2,
-        "intent": "identity_priming_or_calming",
-        "messagesByMood": {
-          "fine": [
-            "Today we separate money from emotion. Numbers are neutral data.",
-            "You can feel emotions about money without letting them drive decisions.",
-            "One sentence to hold: “Emotions are visitors; data is permanent.”"
-          ],
-          "stressed": [
-            "If money anxiety is loud, we don’t fight it. We acknowledge and redirect.",
-            "Your attention is your most valuable asset.",
-            "One sentence to hold: “I can feel this and still act wisely.”"
-          ],
-          "tired_busy": [
-            "Simple focus today: one money thought at a time.",
-            "No multitasking with finances.",
-            "One sentence to hold: “One thing at a time.”"
-          ],
-          "curious": [
-            "Money safety means your self-worth isn’t fluctuating with the market.",
-            "That stability is your real wealth.",
-            "One sentence to hold: “My value is constant.”"
-          ]
-        },
-        "microAction": {
-          "title": "Emotion Label",
-          "instruction": "Name the emotion you feel about one money situation. Just label it: “This is fear/anxiety/excitement.”",
-          "durationSeconds": 30,
-          "isOptional": false
+      "blocks": [
+        {
+          "blockId": "day2_awareness",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Today is about noticing how your body reacts to money thoughts.",
+              "No action needed — awareness alone reduces stress."
+            ],
+            "stressed": [
+              "If money thoughts feel tight or urgent, just notice that sensation.",
+              "You don’t need to change it today."
+            ],
+            "tired_busy": [
+              "Simply observe one money-related thought today.",
+              "That’s enough for now."
+            ],
+            "curious": [
+              "Pay attention to how money thoughts show up in your body.",
+              "Curiosity helps loosen fear."
+            ]
+          }
         }
-      },
-      "day_optional": {
-        "estimatedMinutes": 1,
-        "intent": "micro_alignment",
-        "messagesByMood": {
-          "fine": [
-            "Optional: choose one money emotion to observe today without judgment."
-          ],
-          "stressed": [
-            "Optional: if emotions spike, step away from screens for 5 minutes."
-          ],
-          "tired_busy": [
-            "Optional: delay responding to one money email by an hour."
-          ],
-          "curious": [
-            "Optional: track how often money triggers emotion vs. neutral response."
-          ]
-        },
-        "microAction": {
-          "title": "5-Minute Break",
-          "instruction": "When money emotion arises, take 5 minutes to breathe before responding.",
-          "durationSeconds": 45,
-          "isOptional": true
-        }
-      },
-      "evening": {
-        "estimatedMinutes": 3,
-        "intent": "release_reflection_integration",
-        "messagesByMood": {
-          "fine": [
-            "Tonight we celebrate emotional distance from money. It’s not indifference—it’s wisdom.",
-            "You’re building better decision-making.",
-            "End with: “I trust my calm self.”"
-          ],
-          "stressed": [
-            "Even if emotions felt overwhelming, you’re still here. That’s resilience.",
-            "Emotions pass; habits remain.",
-            "End with: “I can weather this.”"
-          ],
-          "tired_busy": [
-            "Rest now. Emotional processing needs recovery time.",
-            "You did the work of noticing.",
-            "End with: “I release the day’s charge.”"
-          ],
-          "curious": [
-            "You’re learning to observe money emotions like weather: present but not controlling.",
-            "That’s freedom.",
-            "End with: “I observe without being controlled.”"
-          ]
-        },
-        "reflection": {
-          "prompt": "What emotion showed up around money today? Did labeling it change anything?",
-          "exampleAnswers": [
-            "Fear. Labeling made it feel less urgent.",
-            "Anxiety. I could step back and breathe.",
-            "Excitement. It felt motivating without panic."
-          ]
-        }
-      },
-      "resumeCopy": {
-        "neutral": "Welcome back. We’ll continue from today—no catching up needed.",
-        "warm": "Good to have you here. We’ll pick up gently from today."
-      }
+      ]
     },
     {
       "day": 3,
-      "internalPhase": "soften_grip",
-      "morning": {
-        "estimatedMinutes": 2,
-        "intent": "identity_priming_or_calming",
-        "messagesByMood": {
-          "fine": [
-            "Today we practice money trust: acting from steadiness, not reaction.",
-            "Your pace with money improves outcomes more than pressure does.",
-            "One sentence to hold: “Steady action beats frantic action.”"
-          ],
-          "stressed": [
-            "If you’re gripping finances today, that’s a sign you care. We soften the grip.",
-            "Care doesn’t require tension.",
-            "One sentence to hold: “I can care without clenching.”"
-          ],
-          "tired_busy": [
-            "Minimal money work today. Choose one small, supportive step.",
-            "That’s enough to keep momentum.",
-            "One sentence to hold: “Small steps build safety.”"
-          ],
-          "curious": [
-            "Money trust is earned through repetition: calm decisions, consistent action.",
-            "You’re training that today.",
-            "One sentence to hold: “Trust through action.”"
-          ]
-        },
-        "microAction": {
-          "title": "One Supportive Step",
-          "instruction": "Do one small money action that supports your goals (e.g., save $5, review one bill calmly).",
-          "durationSeconds": 40,
-          "isOptional": false
+      "blocks": [
+        {
+          "blockId": "day3_safety_signal",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Today we introduce a simple safety signal.",
+              "Remind yourself: you are okay right now."
+            ],
+            "stressed": [
+              "When money feels urgent, pause and tell yourself: I am safe in this moment.",
+              "This helps your nervous system relax."
+            ],
+            "tired_busy": [
+              "A single sentence is enough today: I am okay right now.",
+              "Repeat it once."
+            ],
+            "curious": [
+              "Notice how your body responds when you affirm safety.",
+              "This is how safety is rebuilt."
+            ]
+          }
         }
-      },
-      "day_optional": {
-        "estimatedMinutes": 1,
-        "intent": "micro_alignment",
-        "messagesByMood": {
-          "fine": [
-            "Optional: after your step, stop. Stopping builds trust in yourself."
-          ],
-          "stressed": [
-            "Optional: if you can’t act, just plan. Planning counts as care."
-          ],
-          "tired_busy": [
-            "Optional: make your step even smaller—2 minutes."
-          ],
-          "curious": [
-            "Optional: notice how your mind wants to add more tasks. Decline them."
-          ]
-        },
-        "microAction": {
-          "title": "Stop After Step",
-          "instruction": "Complete your micro-step, then say: “That’s enough for today.”",
-          "durationSeconds": 30,
-          "isOptional": true
-        }
-      },
-      "evening": {
-        "estimatedMinutes": 3,
-        "intent": "release_reflection_integration",
-        "messagesByMood": {
-          "fine": [
-            "Did you notice? Calm money action feels sustainable. That’s the point.",
-            "You’re building a new relationship with money.",
-            "End with: “I act from steadiness.”"
-          ],
-          "stressed": [
-            "Even if the step felt small, it’s progress. Tension doesn’t equal results.",
-            "You’re retraining your system.",
-            "End with: “I can try again calmly.”"
-          ],
-          "tired_busy": [
-            "Tiny actions are not small when they’re consistent.",
-            "Rest now—consistency needs recovery.",
-            "End with: “I’m human, and that’s okay.”"
-          ],
-          "curious": [
-            "You’re learning discipline: clean action, clean stop.",
-            "That’s how trust grows.",
-            "End with: “I choose clean money habits.”"
-          ]
-        },
-        "reflection": {
-          "prompt": "What was your one supportive step today? Did tension try to add more?",
-          "exampleAnswers": [
-            "I reviewed a bill calmly. Tension wanted more; I stopped.",
-            "I saved a small amount. That was enough.",
-            "I planned a payment. No extras needed."
-          ]
-        }
-      },
-      "resumeCopy": {
-        "neutral": "Welcome back. We’ll continue from today—no catching up needed.",
-        "warm": "Good to have you here. We’ll pick up gently from today."
-      }
+      ]
     },
     {
       "day": 4,
-      "internalPhase": "detach_with_care",
-      "morning": {
-        "estimatedMinutes": 2,
-        "intent": "identity_priming_or_calming",
-        "messagesByMood": {
-          "fine": [
-            "Today we detach from money outcomes: focus on process, not results.",
-            "You can want financial goals without attaching your peace to them.",
-            "One sentence to hold: “Process over outcome.”"
-          ],
-          "stressed": [
-            "Detachment isn’t giving up—it’s giving your mind a break from constant monitoring.",
-            "You practice safety through action, not obsession.",
-            "One sentence to hold: “I can loosen attachment and stay safe.”"
-          ],
-          "tired_busy": [
-            "Gentle day: reduce mental money load.",
-            "Conserve energy for what matters.",
-            "One sentence to hold: “I don’t need to hold it all.”"
-          ],
-          "curious": [
-            "Detachment creates mental space. Space reveals better financial options.",
-            "Your clarity improves when attachment relaxes.",
-            "One sentence to hold: “Space improves decisions.”"
-          ]
-        },
-        "microAction": {
-          "title": "Outcome Release",
-          "instruction": "Name one financial outcome you’re attached to. Say: “I’ll do my part, and release the timing.”",
-          "durationSeconds": 35,
-          "isOptional": false
+      "blocks": [
+        {
+          "blockId": "day4_softening",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Today we soften the emotional charge around money.",
+              "You can hold money lightly — not tightly."
+            ],
+            "stressed": [
+              "Money pressure doesn’t need to be carried all day.",
+              "You are allowed to rest from it."
+            ],
+            "tired_busy": [
+              "Even brief moments of softness help.",
+              "Let this be one of them."
+            ],
+            "curious": [
+              "Explore what happens when you stop gripping money thoughts.",
+              "Softness brings clarity."
+            ]
+          }
         }
-      },
-      "day_optional": {
-        "estimatedMinutes": 1,
-        "intent": "micro_alignment",
-        "messagesByMood": {
-          "fine": [
-            "Optional: choose one money area to ‘not manage’ today. Let it be imperfect."
-          ],
-          "stressed": [
-            "Optional: remove one reassurance ritual (e.g., checking prices repeatedly)."
-          ],
-          "tired_busy": [
-            "Optional: decline one extra financial task."
-          ],
-          "curious": [
-            "Optional: observe what happens when you stop controlling one money variable."
-          ]
-        },
-        "microAction": {
-          "title": "Let One Go",
-          "instruction": "Pick one minor money thing to leave as-is today. Practice non-interference.",
-          "durationSeconds": 45,
-          "isOptional": true
-        }
-      },
-      "evening": {
-        "estimatedMinutes": 3,
-        "intent": "release_reflection_integration",
-        "messagesByMood": {
-          "fine": [
-            "Notice how your body feels when you don’t manage every financial detail.",
-            "That relief is wisdom.",
-            "End with: “I can want more without attachment.”"
-          ],
-          "stressed": [
-            "If you struggled with detachment, that’s normal. Attachment is an old safety strategy.",
-            "We’re replacing it with steadiness.",
-            "End with: “I release one layer of attachment.”"
-          ],
-          "tired_busy": [
-            "You protected your energy today. That’s alignment.",
-            "Rest is part of progress.",
-            "End with: “I don’t have to control everything.”"
-          ],
-          "curious": [
-            "Detachment creates space for insight. Insight improves outcomes.",
-            "Let tomorrow bring clearer thinking.",
-            "End with: “Space brings clarity.”"
-          ]
-        },
-        "reflection": {
-          "prompt": "What did you release attachment to today? Did anything improve—or did you just breathe easier?",
-          "exampleAnswers": [
-            "A specific amount. I felt lighter.",
-            "Investment timing. Decisions felt cleaner.",
-            "Spending control. I enjoyed a purchase more."
-          ]
-        }
-      },
-      "resumeCopy": {
-        "neutral": "Welcome back. We’ll continue from today—no catching up needed.",
-        "warm": "Good to have you here. We’ll pick up gently from today."
-      }
+      ]
     },
     {
       "day": 5,
-      "internalPhase": "build_inner_safety",
-      "morning": {
-        "estimatedMinutes": 2,
-        "intent": "identity_priming_or_calming",
-        "messagesByMood": {
-          "fine": [
-            "Today we build money security: the internal feeling that you’ll be okay financially.",
-            "This isn’t optimism—it’s regulation.",
-            "One sentence to hold: “I can handle financial uncertainty.”"
-          ],
-          "stressed": [
-            "Your mind wants financial guarantees. We give it something better: resilience.",
-            "You don’t need certainty to be secure.",
-            "One sentence to hold: “I can meet uncertainty without collapsing.”"
-          ],
-          "tired_busy": [
-            "Simple security today: reduce the load.",
-            "You can progress without carrying it all.",
-            "One sentence to hold: “I’m supported in this.”"
-          ],
-          "curious": [
-            "Inner financial security prevents emotional spending/bargaining.",
-            "You act cleaner when you feel secure.",
-            "One sentence to hold: “Security improves strategy.”"
-          ]
-        },
-        "microAction": {
-          "title": "Security Statement",
-          "instruction": "Complete: “Even if finances stay uncertain, I will still ______.” Choose one truth.",
-          "durationSeconds": 45,
-          "isOptional": false
+      "blocks": [
+        {
+          "blockId": "day5_neutral_view",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Today we view money more neutrally.",
+              "Money is a tool — not a threat."
+            ],
+            "stressed": [
+              "Money is information, not danger.",
+              "Let that idea settle today."
+            ],
+            "tired_busy": [
+              "You don’t need to judge money today.",
+              "Just let it exist."
+            ],
+            "curious": [
+              "Notice how neutrality changes your thoughts about money.",
+              "Less charge means more choice."
+            ]
+          }
         }
-      },
-      "day_optional": {
-        "estimatedMinutes": 1,
-        "intent": "micro_alignment",
-        "messagesByMood": {
-          "fine": [
-            "Optional: do one supportive act for your future financial self."
-          ],
-          "stressed": [
-            "Optional: reduce stimulation for 15 minutes—no financial news."
-          ],
-          "tired_busy": [
-            "Optional: choose rest over financial worry."
-          ],
-          "curious": [
-            "Optional: replace one certainty-check with a supportive act."
-          ]
-        },
-        "microAction": {
-          "title": "Future Support",
-          "instruction": "Do one small act that supports your financial future (under 5 minutes).",
-          "durationSeconds": 45,
-          "isOptional": true
-        }
-      },
-      "evening": {
-        "estimatedMinutes": 3,
-        "intent": "release_reflection_integration",
-        "messagesByMood": {
-          "fine": [
-            "Tonight we reinforce: you’re bigger than any financial situation.",
-            "That doesn’t reduce your goals—it stabilizes them.",
-            "End with: “I belong to myself first.”"
-          ],
-          "stressed": [
-            "Even one moment of financial steadiness matters.",
-            "You’re building a new default.",
-            "End with: “I can be with uncertainty and stay grounded.”"
-          ],
-          "tired_busy": [
-            "Rest is not avoidance—it’s recovery.",
-            "Let the day close softly.",
-            "End with: “I release what I can’t hold.”"
-          ],
-          "curious": [
-            "You’re practicing financial independence: calm before confirmation.",
-            "That’s real wealth.",
-            "End with: “I lead myself calmly.”"
-          ]
-        },
-        "reflection": {
-          "prompt": "What security statement did you choose? Did it change how you felt about money?",
-          "exampleAnswers": [
-            "I’ll still take care of myself. Felt more secure.",
-            "I’ll still have options. Worry decreased.",
-            "I’ll still be okay. Acted more freely."
-          ]
-        }
-      },
-      "resumeCopy": {
-        "neutral": "Welcome back. We’ll continue from today—no catching up needed.",
-        "warm": "Good to have you here. We’ll pick up gently from today."
-      }
+      ]
     },
     {
       "day": 6,
-      "internalPhase": "clean_desire",
-      "morning": {
-        "estimatedMinutes": 2,
-        "intent": "identity_priming_or_calming",
-        "messagesByMood": {
-          "fine": [
-            "Today we keep financial desire clean: no bargaining, no chasing returns.",
-            "Clean desire is calm, clear, and consistent.",
-            "One sentence to hold: “I want it, and I trust my pace.”"
-          ],
-          "stressed": [
-            "If you’re tempted to chase financial gains today, pause. Chasing is often fear in action.",
-            "We choose calm financial action instead.",
-            "One sentence to hold: “I act from steadiness, not fear.”"
-          ],
-          "tired_busy": [
-            "Minimal financial focus today. One steady decision.",
-            "That keeps momentum without pressure.",
-            "One sentence to hold: “Steady beats intense.”"
-          ],
-          "curious": [
-            "Clean financial desire removes emotional costs.",
-            "You think clearer when you stop bargaining with outcomes.",
-            "One sentence to hold: “No bargaining. Just alignment.”"
-          ]
-        },
-        "microAction": {
-          "title": "No Bargain Statement",
-          "instruction": "Say: “I’m not negotiating my worth with money. I’ll do my part and stay steady.”",
-          "durationSeconds": 30,
-          "isOptional": false
+      "blocks": [
+        {
+          "blockId": "day6_trust",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Today we rebuild trust — not in money, but in yourself.",
+              "You have handled things before."
+            ],
+            "stressed": [
+              "Even under pressure, you have survived.",
+              "That resilience still exists."
+            ],
+            "tired_busy": [
+              "Trust doesn’t require effort today.",
+              "Just acknowledgment."
+            ],
+            "curious": [
+              "Explore the idea that you are more capable than you think.",
+              "This changes your money story."
+            ]
+          }
         }
-      },
-      "day_optional": {
-        "estimatedMinutes": 1,
-        "intent": "micro_alignment",
-        "messagesByMood": {
-          "fine": [
-            "Optional: choose one aligned financial action without needing feedback."
-          ],
-          "stressed": [
-            "Optional: pause one impulsive financial behavior."
-          ],
-          "tired_busy": [
-            "Optional: one small financial act, then rest."
-          ],
-          "curious": [
-            "Optional: notice the difference between aligned vs. chase actions."
-          ]
-        },
-        "microAction": {
-          "title": "Aligned Action",
-          "instruction": "Do one financial action that supports your life regardless of immediate results.",
-          "durationSeconds": 45,
-          "isOptional": true
-        }
-      },
-      "evening": {
-        "estimatedMinutes": 3,
-        "intent": "release_reflection_integration",
-        "messagesByMood": {
-          "fine": [
-            "You’re learning emotional stability with financial ambition.",
-            "That’s how sustainable wealth happens.",
-            "End with: “I keep my center.”"
-          ],
-          "stressed": [
-            "If you chased today, no shame. Just notice and soften.",
-            "Tomorrow brings a clean start.",
-            "End with: “I return to steadiness.”"
-          ],
-          "tired_busy": [
-            "You did enough. Stop here.",
-            "Let your body recover.",
-            "End with: “I close gently.”"
-          ],
-          "curious": [
-            "Aligned actions feel quiet. Chasing feels sharp.",
-            "You’re choosing quiet financial power.",
-            "End with: “Quiet power wins.”"
-          ]
-        },
-        "reflection": {
-          "prompt": "Where did bargaining or chasing show up financially today? What would ‘clean desire’ look like tomorrow?",
-          "exampleAnswers": [
-            "Checking investments obsessively. Tomorrow: planned check.",
-            "Impulsive spending. Tomorrow: pause and reflect.",
-            "Seeking reassurance. Tomorrow: act aligned."
-          ]
-        }
-      },
-      "resumeCopy": {
-        "neutral": "Welcome back. We’ll continue from today—no catching up needed.",
-        "warm": "Good to have you here. We’ll pick up gently from today."
-      }
+      ]
     },
     {
       "day": 7,
-      "internalPhase": "integration",
-      "morning": {
-        "estimatedMinutes": 2,
-        "intent": "identity_priming_or_calming",
-        "messagesByMood": {
-          "fine": [
-            "Day 7: you’re not ‘done’—you’re trained in money safety.",
-            "You can pursue financial goals without emergencies.",
-            "One sentence to hold: “I trust myself with money.”"
-          ],
-          "stressed": [
-            "If financial urgency remains, you now have tools.",
-            "Calm first is your new default.",
-            "One sentence to hold: “I can soothe myself and stay in motion.”"
-          ],
-          "tired_busy": [
-            "You made it through with simplicity. That’s the skill.",
-            "Keep it light today.",
-            "One sentence to hold: “I carry less, move better.”"
-          ],
-          "curious": [
-            "Integration: keep the mechanisms—reduce scanning, release attachment, act cleanly.",
-            "That’s reusable financial wisdom.",
-            "One sentence to hold: “Calm is my financial OS.”"
-          ]
-        },
-        "microAction": {
-          "title": "Personal Money Reset",
-          "instruction": "Choose one line from this week that felt true. Save it as your money reset.",
-          "durationSeconds": 45,
-          "isOptional": false
+      "blocks": [
+        {
+          "blockId": "day7_integration",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Today we integrate a calmer relationship with money.",
+              "Notice what feels lighter now."
+            ],
+            "stressed": [
+              "Even small shifts matter.",
+              "You’ve created more safety than you realize."
+            ],
+            "tired_busy": [
+              "Completion doesn’t need celebration.",
+              "Quiet progress counts."
+            ],
+            "curious": [
+              "Reflect on how your relationship with money has softened.",
+              "This is a foundation you can build on."
+            ]
+          }
         }
-      },
-      "day_optional": {
-        "estimatedMinutes": 1,
-        "intent": "micro_alignment",
-        "messagesByMood": {
-          "fine": [
-            "Optional: pick one financial boundary to keep (e.g., planned checking)."
-          ],
-          "stressed": [
-            "Optional: create a ‘when money spirals’ rule: breathe, name urgency, delay."
-          ],
-          "tired_busy": [
-            "Optional: decide one daily financial support act."
-          ],
-          "curious": [
-            "Optional: write your 3-step financial protocol: (1) name emotion (2) reduce scanning (3) one clean step."
-          ]
-        },
-        "microAction": {
-          "title": "One Boundary",
-          "instruction": "Choose one financial boundary from the week to keep for the next 7 days.",
-          "durationSeconds": 45,
-          "isOptional": true
-        }
-      },
-      "evening": {
-        "estimatedMinutes": 3,
-        "intent": "release_reflection_integration",
-        "messagesByMood": {
-          "fine": [
-            "Close with credit: you practiced financial steadiness.",
-            "That supports every money decision ahead.",
-            "End with: “I move from calm now.”"
-          ],
-          "stressed": [
-            "Even if you struggled, awareness changes outcomes.",
-            "Repeat this anytime financial stress rises.",
-            "End with: “I’m learning, and that’s enough.”"
-          ],
-          "tired_busy": [
-            "Thank you for showing up realistically.",
-            "Finish softly.",
-            "End with: “I release the week and rest.”"
-          ],
-          "curious": [
-            "Financial results improve as urgency decreases.",
-            "That’s nervous system economics.",
-            "End with: “Less urgency, better outcomes.”"
-          ]
-        },
-        "reflection": {
-          "prompt": "What changed most: scanning, attachment, or self-talk? Which program next?",
-          "exampleAnswers": [
-            "Scanning reduced. Next: Wealth Identity.",
-            "Attachment softened. Next: Health Consistency.",
-            "Self-talk improved. Next: Love Readiness."
-          ]
-        }
-      },
-      "resumeCopy": {
-        "neutral": "Welcome back. We’ll continue from today—no catching up needed.",
-        "warm": "Good to have you here. We’ll pick up gently from today."
-      }
-    }
-  ]
-}
-            "One sentence to hold: \"INSIGHT ANCHOR.\""
-          ]
-        },
-
-        "microAction": {
-          "title": "MICRO ACTION TITLE",
-          "instruction": "One embodied, non-heroic action that trains regulation or attention.",
-          "durationSeconds": 30,
-          "isOptional": false
-        }
-      },
-
-      "day_optional": {
-        "estimatedMinutes": 1,
-        "intent": "micro_alignment",
-
-        "messagesByMood": {
-          "fine": [
-            "Optional extension that reinforces the mechanism."
-          ],
-          "stressed": [
-            "Optional action that reduces nervous-system load."
-          ],
-          "tired_busy": [
-            "Optional ultra-small version of the action."
-          ],
-          "curious": [
-            "Optional observation or experiment."
-          ]
-        },
-
-        "microAction": {
-          "title": "OPTIONAL MICRO ACTION",
-          "instruction": "Optional action that can be skipped without penalty.",
-          "durationSeconds": 45,
-          "isOptional": true
-        }
-      },
-
-      "evening": {
-        "estimatedMinutes": 3,
-        "intent": "integration | release | reflection",
-
-        "messagesByMood": {
-          "fine": [
-            "Reinforce progress without praise inflation.",
-            "Anchor calm consistency.",
-            "End with: \"CLOSING SENTENCE.\""
-          ],
-          "stressed": [
-            "Normalise difficulty.",
-            "Emphasise repetition over performance.",
-            "End with: \"SOFT CLOSING.\""
-          ],
-          "tired_busy": [
-            "Allow incompletion.",
-            "Encourage rest without guilt.",
-            "End with: \"REST CLOSING.\""
-          ],
-          "curious": [
-            "Reflect on the mechanism learned today.",
-            "Point out insight, not achievement.",
-            "End with: \"INTEGRATION CLOSING.\""
-          ]
-        },
-
-        "reflection": {
-          "prompt": "One neutral reflection question tied to the mechanism.",
-          "exampleAnswers": [
-            "Example response showing healthy processing.",
-            "Another grounded example.",
-            "A non-performative answer."
-          ]
-        }
-      },
-
-      "resumeCopy": {
-        "neutral": "Welcome back. We’ll continue from today—no catching up needed.",
-        "warm": "Good to have you here. We’ll pick up gently from today."
-      }
+      ]
     }
   ]
 }

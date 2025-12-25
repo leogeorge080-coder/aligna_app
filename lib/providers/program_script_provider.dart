@@ -1,11 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/program_script_loader.dart';
+import '../programs/script_schema.dart';
 
 typedef JsonMap = Map<String, dynamic>;
 
-final programScriptProvider = FutureProvider.family<JsonMap, String>((
+final programScriptProvider = FutureProvider.family<ProgramScript, String>((
   ref,
-  assetPath,
+  programId,
 ) async {
-  return ProgramScriptLoader.loadFromAssetPath(assetPath);
+  final loader = ProgramScriptLoader();
+  return loader.loadByProgramId(programId);
 });

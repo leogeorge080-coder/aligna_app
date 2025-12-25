@@ -1,0 +1,250 @@
+{
+  "schemaVersion": "1.0",
+  "programId": "love_attachment_14d",
+  "title": "Love Attachment Softening",
+  "durationDays": 14,
+  "track": "love",
+  "proOnly": false,
+  "days": [
+    {
+      "day": 1,
+      "title": "Soften urgency",
+      "blocks": [
+        {
+          "blockId": "day1_opening",
+          "type": "coach_message",
+          "messagesByMood": {
+            "calm": [
+              "Welcome. This program softens anxious attachment with gentleness, not force.",
+              "Today we reduce urgency. Urgency is what makes love feel unsafe."
+            ],
+            "stressed": [
+              "I hear the intensity. Today is not about fixing you — it’s about calming the urgency.",
+              "One small shift is enough."
+            ],
+            "tired": [
+              "We’ll keep this light today.",
+              "Just notice urgency without acting on it."
+            ],
+            "motivated": [
+              "Good. We’ll build steadiness and self-trust in love.",
+              "Today starts by lowering urgency."
+            ],
+            "default": [
+              "Welcome. We’ll keep this gentle and clear.",
+              "Today is about reducing urgency in love."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 2,
+      "title": "Name the pattern",
+      "blocks": [
+        {
+          "blockId": "day2_opening",
+          "type": "coach_message",
+          "messagesByMood": {
+            "default": [
+              "Today we name the pattern without shame.",
+              "A pattern is not your identity — it’s a learned protection."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 3,
+      "title": "Separate fear from facts",
+      "blocks": [
+        {
+          "blockId": "day3_opening",
+          "type": "coach_message",
+          "messagesByMood": {
+            "default": [
+              "Today we separate fear from facts.",
+              "Facts are what happened. Fear is what your mind predicts."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 4,
+      "title": "Return to your body",
+      "blocks": [
+        {
+          "blockId": "day4_opening",
+          "type": "coach_message",
+          "messagesByMood": {
+            "default": [
+              "When attachment spikes, the body goes into alarm.",
+              "Today: return to your body for 30 seconds. A calm body creates calm choices."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 5,
+      "title": "Stop mind-reading",
+      "blocks": [
+        {
+          "blockId": "day5_opening",
+          "type": "coach_message",
+          "messagesByMood": {
+            "default": [
+              "Today we reduce mind-reading.",
+              "You do not need to predict someone’s feelings to be safe."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 6,
+      "title": "Replace chasing with clarity",
+      "blocks": [
+        {
+          "blockId": "day6_opening",
+          "type": "coach_message",
+          "messagesByMood": {
+            "default": [
+              "Chasing is often fear trying to regain control.",
+              "Today we replace chasing with clarity: what do you actually need?"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 7,
+      "title": "Halfway integration",
+      "blocks": [
+        {
+          "blockId": "day7_opening",
+          "type": "coach_message",
+          "messagesByMood": {
+            "default": [
+              "Day 7. Notice what already feels steadier.",
+              "Softening attachment is progress, not perfection."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 8,
+      "title": "Choose a calmer response",
+      "blocks": [
+        {
+          "blockId": "day8_opening",
+          "type": "coach_message",
+          "messagesByMood": {
+            "default": [
+              "Today we practise a calmer response.",
+              "Before you text/call/seek reassurance: pause. Then choose one kind step for yourself first."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 9,
+      "title": "Build inner reassurance",
+      "blocks": [
+        {
+          "blockId": "day9_opening",
+          "type": "coach_message",
+          "messagesByMood": {
+            "default": [
+              "Reassurance from others can feel good, but it can also create dependence.",
+              "Today we build inner reassurance: ‘I can handle this moment.’"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 10,
+      "title": "Strengthen boundaries gently",
+      "blocks": [
+        {
+          "blockId": "day10_opening",
+          "type": "coach_message",
+          "messagesByMood": {
+            "default": [
+              "Boundaries are not rejection. They are self-respect.",
+              "Today we practise one gentle boundary: a pause, a limit, or a clear request."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 11,
+      "title": "Stop measuring your worth",
+      "blocks": [
+        {
+          "blockId": "day11_opening",
+          "type": "coach_message",
+          "messagesByMood": {
+            "default": [
+              "Today we stop measuring your worth by someone’s attention.",
+              "Attention is information — not proof of your value."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 12,
+      "title": "Practice secure self-talk",
+      "blocks": [
+        {
+          "blockId": "day12_opening",
+          "type": "coach_message",
+          "messagesByMood": {
+            "default": [
+              "Today we practise secure self-talk.",
+              "Try: ‘I am safe. I can wait. I can choose calmly.’"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 13,
+      "title": "Choose consistency over intensity",
+      "blocks": [
+        {
+          "blockId": "day13_opening",
+          "type": "coach_message",
+          "messagesByMood": {
+            "default": [
+              "Intensity can feel like love, but it often comes from alarm.",
+              "Today we choose consistency: small, steady, respectful connection."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "day": 14,
+      "title": "Soft completion",
+      "blocks": [
+        {
+          "blockId": "day14_opening",
+          "type": "coach_message",
+          "messagesByMood": {
+            "default": [
+              "Day 14. Soft completion.",
+              "You are building a calmer relationship with love — less urgency, more choice."
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

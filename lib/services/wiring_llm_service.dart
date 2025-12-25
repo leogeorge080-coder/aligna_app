@@ -12,10 +12,14 @@ class WiringLlmService {
     required AlignaMood mood,
     required AlignaLanguage language,
   }) {
-    // Keep key stable; trim intention; avoid huge keys by hashing lightly
-    final t = coreIntention.trim();
-    final intentKey = t.length <= 40 ? t : t.substring(0, 40);
-    return 'wiring_llm_v1|day=$day|mood=${mood.name}|lang=${language.name}|intent=$intentKey';
+    // Stable cache key for program enhancement
+    final programId = 'wiring'; // placeholder for wiring program
+    final blockId = coreIntention
+        .trim()
+        .replaceAll(' ', '_')
+        .substring(0, 20); // simplified blockId
+    final moodKey = mood.name;
+    return 'aligna:enhance:v1:$programId:d$day:$blockId:$moodKey';
   }
 
   static Future<CoachReply> getWiringReply({

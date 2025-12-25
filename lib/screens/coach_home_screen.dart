@@ -1,3 +1,4 @@
+// lib/screens/coach_home_screen.dart
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -6,13 +7,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // ─────────────────────────────────────────────
 // Program engine (script-driven coach)
 // ─────────────────────────────────────────────
-import '../models/aligna_mood.dart' as prog;
 import '../models/program_session.dart';
 import '../providers/program_session_bundle_provider.dart';
 import '../providers/program_progress_actions_provider.dart';
 import '../providers/program_catalogue_provider.dart';
 import '../providers/program_progress_provider.dart';
 import '../providers/resume_copy_provider.dart';
+import '../models/program_progress.dart';
+import '../models/program_resume_plan.dart';
 
 // ─────────────────────────────────────────────
 // App-level state & providers
@@ -20,6 +22,8 @@ import '../providers/resume_copy_provider.dart';
 import 'package:aligna_app/providers/app_providers.dart' as app;
 import '../providers/coach_llm_provider.dart';
 import '../providers/micro_action_provider.dart';
+import '../providers/coach_enhance_providers.dart';
+import '../services/coach_enhance_service.dart';
 
 // ─────────────────────────────────────────────
 // App infrastructure
@@ -36,11 +40,8 @@ import '../widgets/coach_bubble.dart';
 import '../widgets/typing_bubble.dart';
 import '../widgets/calm_cue.dart';
 import '../widgets/program_picker_sheet.dart';
-
-/// Single source of truth for active program id (prefs-backed).
-final activeProgramIdProvider = FutureProvider<String?>((ref) async {
-  return Prefs.loadActiveProgramId();
-});
+import '../widgets/aura_widget.dart';
+import '../widgets/staggered_coach_bubbles.dart';
 
 class CoachHomeScreen extends ConsumerStatefulWidget {
   const CoachHomeScreen({super.key});
@@ -59,7 +60,7 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen> {
   final Map<String, TextEditingController> _reflectionControllers = {};
 
   // Simple UI toggle (fully open mode: both available)
-  ProgramTimeOfDay _timeOfDay = ProgramTimeOfDay.morning;
+  final ProgramTimeOfDay _timeOfDay = ProgramTimeOfDay.morning;
 
   @override
   void dispose() {
@@ -72,25 +73,17 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen> {
   }
 
   // Map app mood (calm/stressed/tired/motivated) -> program mood
-  prog.AlignaMood _mapMood(app.AlignaMood m) {
+  String _mapMood(app.AlignaMood m) {
     switch (m) {
       case app.AlignaMood.stressed:
-        return prog.AlignaMood.stressed;
+        return 'stressed';
       case app.AlignaMood.tired:
-        return prog.AlignaMood.tiredBusy;
+        return 'tired';
       case app.AlignaMood.motivated:
-        return prog.AlignaMood.curious;
+        return 'motivated';
       case app.AlignaMood.calm:
-        return prog.AlignaMood.fine;
+        return 'calm';
     }
-  }
-
-  // v1: script asset path mapping (expand as you add scripts)
-  String _scriptAssetPathFor(String programId) {
-    if (programId == 'outcome_soothing_7d') {
-      return 'assets/data/program_scripts/outcome_soothing_7d.v1.json';
-    }
-    return 'assets/data/program_scripts/outcome_soothing_7d.v1.json';
   }
 
   Future<void> _endSessionUiOnly() async {
@@ -166,10 +159,7 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen> {
             CoachBubble(text: resumeLine),
             const SizedBox(height: 12),
           ],
-          for (final line in s.messages) ...[
-            CoachBubble(text: line),
-            const SizedBox(height: 10),
-          ],
+          StaggeredCoachBubbles(messages: s.messages),
           if (s.microAction != null) ...[
             const SizedBox(height: 8),
             Card(
@@ -244,6 +234,35 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen> {
     );
   }
 
+  // Robust extractors for both Map-based and typed catalogue models
+  String? _catalogueProgramId(dynamic item) {
+    if (item == null) return null;
+    if (item is Map) {
+      final v = item['programId'];
+      return v is String && v.trim().isNotEmpty ? v : null;
+    }
+    try {
+      final v = (item as dynamic).programId;
+      return v is String && v.trim().isNotEmpty ? v : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  int? _catalogueDurationDays(dynamic item) {
+    if (item == null) return null;
+    if (item is Map) {
+      final v = item['durationDays'];
+      return v is int ? v : int.tryParse('$v');
+    }
+    try {
+      final v = (item as dynamic).durationDays;
+      return v is int ? v : int.tryParse('$v');
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = L10n.of(ref);
@@ -254,11 +273,23 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen> {
     final actionText = ref.watch(microActionTextProvider);
     final actionStatus = ref.watch(microActionStatusProvider);
 
-    final progressAsync = ref.watch(programProgressProvider);
-    final resumeAsync = ref.watch(resumeCopyProvider);
-
     final catalogueAsync = ref.watch(programCatalogueProvider);
-    final activeProgramAsync = ref.watch(activeProgramIdProvider);
+
+    // IMPORTANT: treat empty string as null (common prefs bug source)
+    final rawActiveId = ref.watch(app.activeProgramIdProvider);
+    final activeId = (rawActiveId == null || rawActiveId.trim().isEmpty)
+        ? null
+        : rawActiveId;
+
+    final progressAsync = activeId == null
+        ? const AsyncValue.data(null)
+        : ref.watch(programProgressProvider);
+
+    final resumeAsync = activeId == null
+        ? const AsyncValue.data(
+            ResumeCopyResult(text: null, shouldMarkShown: false),
+          )
+        : ref.watch(resumeCopyProvider);
 
     // If mood is missing, show a calm recovery (do not pop routes).
     if (appMood == null) {
@@ -295,11 +326,17 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen> {
                 builder: (_) {
                   return ProgramPickerSheet(
                     items: items,
-                    isPro: true, // fully open mode; sheet should not upsell
-                    onUpsellRequested: () {}, // no-op
+                    isPro: false,
+                    onUpsellRequested: () {},
                     onPick: (item) async {
-                      await Prefs.setActiveProgramId(item.programId);
-                      ref.invalidate(activeProgramIdProvider);
+                      final pid = _catalogueProgramId(item);
+                      if (pid == null) {
+                        debugPrint('[PROGRAM] pick failed: null programId');
+                        return;
+                      }
+                      await Prefs.setActiveProgramId(pid);
+                      ref.read(app.activeProgramIdProvider.notifier).state =
+                          pid;
                       if (context.mounted) Navigator.pop(context);
                     },
                   );
@@ -363,110 +400,80 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen> {
           const SizedBox(height: 12),
 
           // Active program state (single source of truth)
-          activeProgramAsync.when(
-            data: (activeId) {
+          Builder(
+            builder: (context) {
               final isProgramMode = activeId != null;
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          isProgramMode
-                              ? 'Program: $activeId'
-                              : 'No program selected',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: AlignaColors.subtext,
+                  if (isProgramMode)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Program active',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        TextButton(
+                          onPressed: () =>
+                              ref
+                                      .read(app.shellTabIndexProvider.notifier)
+                                      .state =
+                                  1,
+                          child: const Text('Change'),
+                        ),
+                      ],
+                    )
+                  else
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'No program selected',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: AlignaColors.subtext,
+                            ),
                           ),
                         ),
-                      ),
-                      if (isProgramMode) ...[
-                        SegmentedButton<ProgramTimeOfDay>(
-                          segments: const [
-                            ButtonSegment(
-                              value: ProgramTimeOfDay.morning,
-                              label: Text('Morning'),
-                            ),
-                            ButtonSegment(
-                              value: ProgramTimeOfDay.evening,
-                              label: Text('Evening'),
-                            ),
-                          ],
-                          selected: {_timeOfDay},
-                          onSelectionChanged: (s) {
-                            setState(() => _timeOfDay = s.first);
-                          },
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      TextButton(
-                        onPressed: () async {
-                          final items = await ref.read(
-                            programCatalogueProvider.future,
-                          );
-                          if (!context.mounted) return;
-
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            builder: (_) {
-                              return ProgramPickerSheet(
-                                items: items,
-                                isPro: true,
-                                onUpsellRequested: () {},
-                                onPick: (item) async {
-                                  await Prefs.setActiveProgramId(
-                                    item.programId,
-                                  );
-                                  ref.invalidate(activeProgramIdProvider);
-                                  if (context.mounted) Navigator.pop(context);
-                                },
-                              );
-                            },
-                          );
-                        },
-                        child: Text(isProgramMode ? 'Change' : 'Choose'),
-                      ),
-                      if (isProgramMode)
                         TextButton(
-                          onPressed: () async {
-                            await Prefs.clearActiveProgramId();
-                            ref.invalidate(activeProgramIdProvider);
-                          },
-                          child: const Text('Stop'),
+                          onPressed: () =>
+                              ref
+                                      .read(app.shellTabIndexProvider.notifier)
+                                      .state =
+                                  1,
+                          child: const Text('Choose'),
                         ),
-                    ],
-                  ),
+                      ],
+                    ),
 
                   const SizedBox(height: 12),
 
-                  // Program-first: if program active, render program session.
                   if (isProgramMode)
                     _ProgramArea(
                       activeProgramId: activeId,
                       timeOfDay: _timeOfDay,
                       appMood: appMood,
                       catalogueAsync: catalogueAsync,
-                      scriptAssetPathFor: _scriptAssetPathFor,
                       mapMood: _mapMood,
                       sessionBuilder: _buildProgramSession,
+                      catalogueProgramId: _catalogueProgramId,
+                      catalogueDurationDays: _catalogueDurationDays,
                     )
                   else
                     _ChatArea(
                       t: t,
                       controller: _controller,
                       replyState: replyState,
-                      onSend: (text) {
-                        ref.read(coachLlmProvider.notifier).generateReply(text);
-                      },
+                      onSend: (text) => ref
+                          .read(coachLlmProvider.notifier)
+                          .generateReply(text),
                     ),
 
                   const SizedBox(height: 12),
 
-                  // Micro-action system (kept, but should not fight program actions)
+                  // Micro-action system
                   if (actionText != null &&
                       actionStatus == MicroActionStatus.offered)
                     _MicroActionCard(
@@ -496,14 +503,6 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen> {
                 ],
               );
             },
-            loading: () => const Padding(
-              padding: EdgeInsets.only(top: 16),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (e, _) => Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Text('Failed to load program state: $e'),
-            ),
           ),
         ],
       ),
@@ -511,15 +510,16 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen> {
   }
 }
 
-class _ProgramArea extends ConsumerWidget {
+class _ProgramArea extends ConsumerStatefulWidget {
   const _ProgramArea({
     required this.activeProgramId,
     required this.timeOfDay,
     required this.appMood,
     required this.catalogueAsync,
-    required this.scriptAssetPathFor,
     required this.mapMood,
     required this.sessionBuilder,
+    required this.catalogueProgramId,
+    required this.catalogueDurationDays,
   });
 
   final String activeProgramId;
@@ -527,8 +527,7 @@ class _ProgramArea extends ConsumerWidget {
   final app.AlignaMood appMood;
   final AsyncValue<List<dynamic>> catalogueAsync;
 
-  final String Function(String programId) scriptAssetPathFor;
-  final prog.AlignaMood Function(app.AlignaMood) mapMood;
+  final String Function(app.AlignaMood) mapMood;
 
   final Widget Function(
     BuildContext context,
@@ -537,44 +536,334 @@ class _ProgramArea extends ConsumerWidget {
   )
   sessionBuilder;
 
+  final String? Function(dynamic item) catalogueProgramId;
+  final int? Function(dynamic item) catalogueDurationDays;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final items = catalogueAsync.valueOrNull ?? const [];
+  ConsumerState<_ProgramArea> createState() => _ProgramAreaState();
+}
+
+class _ProgramAreaState extends ConsumerState<_ProgramArea> {
+  List<String>? _displayedLines;
+  String? _lastSessionKey;
+
+  Timer? _loadingWatchdog;
+  bool _showLoadRecovery = false;
+
+  bool _didProbe = false;
+
+  @override
+  void dispose() {
+    _loadingWatchdog?.cancel();
+    super.dispose();
+  }
+
+  void _armLoadingWatchdog() {
+    if (_loadingWatchdog != null) return; // do not re-arm on every rebuild
+    _showLoadRecovery = false;
+
+    _loadingWatchdog = Timer(const Duration(seconds: 8), () {
+      if (!mounted) return;
+      setState(() => _showLoadRecovery = true);
+    });
+  }
+
+  void _clearLoadingWatchdog() {
+    _loadingWatchdog?.cancel();
+    _loadingWatchdog = null;
+    _showLoadRecovery = false;
+  }
+
+  String _guessScriptAssetPath(String programId) {
+    return 'assets/data/program_scripts/$programId.v1.json';
+  }
+
+  Future<void> _probeProviderOnce(ProgramSessionRequest req) async {
+    if (_didProbe) return;
+    _didProbe = true;
+
+    unawaited(() async {
+      try {
+        debugPrint('[PROGRAM] probe start: $req');
+        await ref
+            .read(programSessionBundleProvider(req).future)
+            .timeout(const Duration(seconds: 6));
+        debugPrint('[PROGRAM] probe ok: $req');
+      } catch (e, st) {
+        debugPrint('[PROGRAM] probe FAILED: $e');
+        debugPrint('$st');
+        if (!mounted) return;
+      }
+    }());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final items = widget.catalogueAsync.valueOrNull ?? const [];
 
     int durationDays = 7;
     for (final p in items) {
-      // catalogue provider returns raw json maps (based on your usage)
-      if (p is Map && p['programId'] == activeProgramId) {
-        final d = p['durationDays'];
-        if (d is int) durationDays = d;
+      final pid = widget.catalogueProgramId(p);
+      if (pid == widget.activeProgramId) {
+        final d = widget.catalogueDurationDays(p);
+        if (d != null && d > 0) durationDays = d;
         break;
       }
     }
 
     final req = ProgramSessionRequest(
-      programId: activeProgramId,
+      programId: widget.activeProgramId,
       durationDays: durationDays,
-      scriptAssetPath: scriptAssetPathFor(activeProgramId),
-      timeOfDay: timeOfDay,
-      mood: mapMood(appMood),
+      timeOfDay: widget.timeOfDay,
+      mood: widget.mapMood(widget.appMood),
     );
 
-    return ref
-        .watch(programSessionBundleProvider(req))
-        .when(
-          data: (bundle) => sessionBuilder(context, bundle, req),
-          loading: () => const Padding(
-            padding: EdgeInsets.only(top: 16),
-            child: TypingBubble(),
+    final asyncBundle = ref.watch(programSessionBundleProvider(req));
+
+    return asyncBundle.when(
+      data: (bundle) {
+        _clearLoadingWatchdog();
+        _didProbe = false;
+        return _buildEnhancedSession(context, bundle, req);
+      },
+      loading: () {
+        _armLoadingWatchdog();
+        _probeProviderOnce(req);
+
+        if (_displayedLines != null && _displayedLines!.isNotEmpty) {
+          final fallbackSession = ProgramSession(
+            programId: req.programId,
+            day: 1,
+            timeOfDay: req.timeOfDay,
+            estimatedMinutes: 1,
+            intent: '',
+            messages: _displayedLines!,
+            microAction: null,
+            reflection: null,
+            resumeCopy: const ResumeCopy(
+              neutral: 'Welcome back.',
+              warm: 'Good to have you here.',
+            ),
+            llmPromptKey: null,
+          );
+
+          final fallbackBundle = ProgramSessionBundle(
+            progress: ProgramProgress(
+              programId: req.programId,
+              lastCompletedDay: 0,
+              startedAt: DateTime.now().toUtc(),
+            ),
+            plan: ProgramResumePlan(
+              dayToShow: 1,
+              showResumeLine: false,
+              resumeTone: 'neutral',
+              gapDays: 0,
+            ),
+            session: fallbackSession,
+          );
+
+          return widget.sessionBuilder(context, fallbackBundle, req);
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const TypingBubble(),
+              if (_showLoadRecovery) ...[
+                const SizedBox(height: 12),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'Your program content is loading.',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'If this keeps happening, tap Retry. Then open Debug details.',
+                          style: TextStyle(color: AlignaColors.subtext),
+                        ),
+                        const SizedBox(height: 12),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _didProbe = false;
+                              _loadingWatchdog?.cancel();
+                              _loadingWatchdog = null;
+                              _showLoadRecovery = false;
+                            });
+                            ref.invalidate(programSessionBundleProvider(req));
+                          },
+                          child: const Text('Retry'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            final asset = _guessScriptAssetPath(req.programId);
+                            debugPrint('[PROGRAM] DEBUG DETAILS');
+                            debugPrint(' activeProgramId: ${req.programId}');
+                            debugPrint(' durationDays: ${req.durationDays}');
+                            debugPrint(' timeOfDay: ${req.timeOfDay}');
+                            debugPrint(' mood: ${req.mood}');
+                            debugPrint(' guessedAssetPath: $asset');
+
+                            showDialog(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title: const Text('Debug details'),
+                                content: SelectableText(
+                                  'req:\n$req\n\n'
+                                  'guessed script asset:\n$asset\n\n'
+                                  'Next check:\n'
+                                  '1) Does this file exist in assets?\n'
+                                  '2) Is assets/data/program_scripts/ in pubspec assets?\n'
+                                  '3) Do you see [SCRIPT] loaded OK logs?\n',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Close'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          child: const Text('Debug details'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
-          error: (e, _) => Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: Text(
-              'Program load failed: $e',
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+        );
+      },
+      error: (e, st) {
+        _clearLoadingWatchdog();
+        debugPrint('[PROGRAM] provider error: $e');
+        debugPrint('$st');
+
+        return Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Program load failed',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SelectableText(e.toString()),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: () {
+                      ref.invalidate(programSessionBundleProvider(req));
+                    },
+                    child: const Text('Retry'),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      await Prefs.setActiveProgramId('');
+                      ref.read(app.activeProgramIdProvider.notifier).state =
+                          null;
+                    },
+                    child: const Text('Clear program'),
+                  ),
+                ],
+              ),
             ),
           ),
         );
+      },
+    );
+  }
+
+  Widget _buildEnhancedSession(
+    BuildContext context,
+    ProgramSessionBundle bundle,
+    ProgramSessionRequest req,
+  ) {
+    final session = bundle.session;
+    final fallbackLines = session.messages;
+
+    final sessionKey =
+        '${session.programId}_${session.day}_${session.timeOfDay}';
+
+    if (_lastSessionKey != sessionKey) {
+      _lastSessionKey = sessionKey;
+      _displayedLines = null;
+    }
+
+    if (_displayedLines == null) {
+      _displayedLines = fallbackLines;
+
+      // Attempt enhancement only if llmPromptKey exists.
+      if (session.llmPromptKey != null) {
+        _enhanceLines(session, req);
+      }
+    }
+
+    final enhancedSession = ProgramSession(
+      programId: session.programId,
+      day: session.day,
+      timeOfDay: session.timeOfDay,
+      estimatedMinutes: session.estimatedMinutes,
+      intent: session.intent,
+      messages: _displayedLines!,
+      microAction: session.microAction,
+      reflection: session.reflection,
+      resumeCopy: session.resumeCopy,
+      llmPromptKey: session.llmPromptKey,
+    );
+
+    final enhancedBundle = ProgramSessionBundle(
+      progress: bundle.progress,
+      plan: bundle.plan,
+      session: enhancedSession,
+    );
+
+    return widget.sessionBuilder(context, enhancedBundle, req);
+  }
+
+  void _enhanceLines(ProgramSession session, ProgramSessionRequest req) {
+    unawaited(() async {
+      try {
+        final svc = ref.read(coachEnhanceServiceProvider);
+
+        final res = await svc
+            .enhance(
+              request: CoachEnhanceRequest(
+                programId: widget.activeProgramId,
+                day: session.day,
+                blockId: req.timeOfDay.jsonKey,
+                moodKey: req.mood,
+                language: 'en',
+                fallbackLines: session.messages,
+                maxLines: session.messages.length,
+              ),
+            )
+            .timeout(const Duration(seconds: 8));
+
+        if (!mounted) return;
+
+        setState(() {
+          _displayedLines = res.lines.isNotEmpty ? res.lines : session.messages;
+        });
+      } catch (e) {
+        debugPrint('[ENHANCE] failed (non-fatal): $e');
+      }
+    }());
   }
 }
 
@@ -603,7 +892,6 @@ class _ChatArea extends StatelessWidget {
       children: [
         const CoachBubble(text: "What would you like to focus on today?"),
         const SizedBox(height: 12),
-
         if (!hasReply)
           Card(
             child: Padding(
@@ -649,27 +937,6 @@ class _ChatArea extends StatelessWidget {
               ),
             ),
           ),
-
-        replyState.when(
-          data: (reply) {
-            if (reply == null) return const SizedBox.shrink();
-            return Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: CoachBubble(text: reply.message),
-            );
-          },
-          loading: () => const Padding(
-            padding: EdgeInsets.only(top: 16),
-            child: TypingBubble(),
-          ),
-          error: (_, __) => Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: Text(
-              'Something went wrong. Try again.',
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -701,7 +968,10 @@ class _MicroActionCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(text),
             const SizedBox(height: 12),
-            ElevatedButton(onPressed: onStart, child: const Text("Start")),
+            ElevatedButton(
+              onPressed: onStart,
+              child: const Text("Let’s do it"),
+            ),
             TextButton(onPressed: onSkip, child: const Text("Not today")),
           ],
         ),

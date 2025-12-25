@@ -1,0 +1,849 @@
+{
+  "schemaVersion": "1.0",
+  "programId": "wealth_identity_30d",
+  "title": "Wealth Identity Deepening",
+  "durationDays": 30,
+  "track": "wealth",
+  "proOnly": false,
+  "days": [
+    {
+      "day": 1,
+      "blocks": [
+        {
+          "id": "day1_opening",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "This program isn’t about earning more.",
+              "It’s about becoming someone who relates to wealth differently."
+            ],
+            "stressed": [
+              "Wealth identity grows from safety, not pressure.",
+              "We’ll move slowly."
+            ],
+            "tired_busy": [
+              "There’s nothing to do today.",
+              "Just let this idea land."
+            ],
+            "curious": [
+              "Wealth begins as an internal posture.",
+              "Let’s explore that."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 2,
+      "blocks": [
+        {
+          "id": "day2_definition",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Notice how you define wealth.",
+              "Definitions shape experience."
+            ],
+            "stressed": [
+              "If wealth feels distant or heavy, just notice that.",
+              "No correction needed."
+            ],
+            "tired_busy": [
+              "You don’t need a new definition today.",
+              "Observation is enough."
+            ],
+            "curious": [
+              "Explore what wealth means beyond money.",
+              "Identity expands here."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 3,
+      "blocks": [
+        {
+          "id": "day3_distance",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity weakens when wealth feels ‘not for me’.",
+              "Notice any distance."
+            ],
+            "stressed": [
+              "Feeling excluded from wealth is common.",
+              "Awareness begins change."
+            ],
+            "tired_busy": [
+              "Distance can soften without effort.",
+              "Just notice it."
+            ],
+            "curious": [
+              "Explore how distance from wealth formed.",
+              "Curiosity reduces it."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 4,
+      "blocks": [
+        {
+          "id": "day4_permission",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity includes permission to have.",
+              "Notice any resistance."
+            ],
+            "stressed": [
+              "You don’t need to justify wanting stability.",
+              "Permission matters."
+            ],
+            "tired_busy": [
+              "Permission can be quiet.",
+              "No action needed."
+            ],
+            "curious": [
+              "Explore what permission around wealth feels like.",
+              "This is identity work."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 5,
+      "blocks": [
+        {
+          "id": "day5_safety",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity rests on internal safety.",
+              "Not numbers."
+            ],
+            "stressed": [
+              "Without safety, wealth feels unstable.",
+              "We build safety first."
+            ],
+            "tired_busy": [
+              "Safety can be sensed, not built.",
+              "Pause into it."
+            ],
+            "curious": [
+              "Notice how safety and wealth identity connect.",
+              "This is foundational."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 6,
+      "blocks": [
+        {
+          "id": "day6_comparison",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Comparison distorts wealth identity.",
+              "Today, step out of it."
+            ],
+            "stressed": [
+              "Others’ wealth does not reduce yours.",
+              "Notice that belief."
+            ],
+            "tired_busy": [
+              "You don’t need to compare today.",
+              "Rest from it."
+            ],
+            "curious": [
+              "Observe how comparison shapes self-image.",
+              "Awareness loosens it."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 7,
+      "blocks": [
+        {
+          "id": "day7_week1",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Week one builds awareness.",
+              "Notice what feels different already."
+            ],
+            "stressed": [
+              "Even subtle shifts matter.",
+              "No rush."
+            ],
+            "tired_busy": [
+              "Completion doesn’t require effort.",
+              "Just acknowledgment."
+            ],
+            "curious": [
+              "Reflect lightly on this first phase.",
+              "Identity evolves gently."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 8,
+      "blocks": [
+        {
+          "id": "day8_receiving",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity includes the ability to receive.",
+              "Notice comfort or discomfort."
+            ],
+            "stressed": [
+              "Receiving can feel unsafe.",
+              "We’ll soften that slowly."
+            ],
+            "tired_busy": [
+              "You don’t need to receive more today.",
+              "Just notice reactions."
+            ],
+            "curious": [
+              "Explore how receiving affects your sense of self.",
+              "This is key."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 9,
+      "blocks": [
+        {
+          "id": "day9_deserving",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Deserving is often tied to effort.",
+              "Notice that link."
+            ],
+            "stressed": [
+              "You don’t need to earn worth.",
+              "Let that idea settle."
+            ],
+            "tired_busy": [
+              "Deserving doesn’t require action today.",
+              "Just awareness."
+            ],
+            "curious": [
+              "Observe how deserving beliefs shape wealth identity.",
+              "This is powerful."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 10,
+      "blocks": [
+        {
+          "id": "day10_stability",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity values stability over spikes.",
+              "Let that reframe sink in."
+            ],
+            "stressed": [
+              "Chasing spikes creates stress.",
+              "Stability feels safer."
+            ],
+            "tired_busy": [
+              "Stability can be boring — and calming.",
+              "That’s okay."
+            ],
+            "curious": [
+              "Explore stability as a wealth trait.",
+              "Identity shifts here."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 11,
+      "blocks": [
+        {
+          "id": "day11_time",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity relates differently to time.",
+              "Less urgency, more patience."
+            ],
+            "stressed": [
+              "Rushing weakens wealth identity.",
+              "Slowing strengthens it."
+            ],
+            "tired_busy": [
+              "You don’t need to think long-term today.",
+              "Just rest in time."
+            ],
+            "curious": [
+              "Notice how time pressure affects money thoughts.",
+              "This matters."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 12,
+      "blocks": [
+        {
+          "id": "day12_control",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity doesn’t rely on control.",
+              "It relies on adaptability."
+            ],
+            "stressed": [
+              "Trying to control everything creates fragility.",
+              "Let go slightly."
+            ],
+            "tired_busy": [
+              "Control can rest today.",
+              "Nothing breaks."
+            ],
+            "curious": [
+              "Explore adaptability as a wealth trait.",
+              "It’s stabilizing."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 13,
+      "blocks": [
+        {
+          "id": "day13_selftrust",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity includes trust in yourself.",
+              "Notice where that exists."
+            ],
+            "stressed": [
+              "Even under pressure, you’ve adapted before.",
+              "Trust that."
+            ],
+            "tired_busy": [
+              "Trust doesn’t need proof today.",
+              "Just acknowledgment."
+            ],
+            "curious": [
+              "Explore how self-trust supports wealth.",
+              "This is central."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 14,
+      "blocks": [
+        {
+          "id": "day14_midpoint",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "You’re halfway through this shift.",
+              "Notice what feels more grounded."
+            ],
+            "stressed": [
+              "Identity changes subtly before visibly.",
+              "That’s normal."
+            ],
+            "tired_busy": [
+              "Midpoint requires nothing.",
+              "Just presence."
+            ],
+            "curious": [
+              "Reflect lightly on how wealth feels now.",
+              "No conclusions needed."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 15,
+      "blocks": [
+        {
+          "id": "day15_capacity",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity includes capacity to hold more.",
+              "Without strain."
+            ],
+            "stressed": [
+              "Capacity grows with safety.",
+              "Not force."
+            ],
+            "tired_busy": [
+              "You don’t need more capacity today.",
+              "Just awareness."
+            ],
+            "curious": [
+              "Explore what capacity means internally.",
+              "This is identity-level."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 16,
+      "blocks": [
+        {
+          "id": "day16_fluctuation",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity tolerates fluctuation.",
+              "Ups and downs are normal."
+            ],
+            "stressed": [
+              "Fluctuations don’t mean failure.",
+              "They mean movement."
+            ],
+            "tired_busy": [
+              "Nothing needs stabilizing today.",
+              "Just notice."
+            ],
+            "curious": [
+              "Observe how fluctuation affects emotions.",
+              "Identity stabilizes beneath it."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 17,
+      "blocks": [
+        {
+          "id": "day17_enough",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity includes knowing ‘enough’.",
+              "Notice what that feels like."
+            ],
+            "stressed": [
+              "Enough is not a number.",
+              "It’s a felt sense."
+            ],
+            "tired_busy": [
+              "You don’t need to define enough today.",
+              "Just sense it."
+            ],
+            "curious": [
+              "Explore how ‘enough’ changes urgency.",
+              "This is freeing."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 18,
+      "blocks": [
+        {
+          "id": "day18_spaciousness",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity feels spacious.",
+              "Not cramped."
+            ],
+            "stressed": [
+              "Pressure shrinks perspective.",
+              "Space restores it."
+            ],
+            "tired_busy": [
+              "Space can be felt briefly.",
+              "That’s enough."
+            ],
+            "curious": [
+              "Notice how spaciousness changes money thoughts.",
+              "Identity shifts here."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 19,
+      "blocks": [
+        {
+          "id": "day19_generosity",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Generosity grows naturally from safety.",
+              "Not obligation."
+            ],
+            "stressed": [
+              "You don’t need to give to be worthy.",
+              "Let that belief soften."
+            ],
+            "tired_busy": [
+              "Generosity can be internal today.",
+              "Kindness to yourself."
+            ],
+            "curious": [
+              "Explore generosity as an identity trait.",
+              "It’s stabilizing."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 20,
+      "blocks": [
+        {
+          "id": "day20_power",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity includes quiet power.",
+              "Not force."
+            ],
+            "stressed": [
+              "Power doesn’t require domination.",
+              "It can be calm."
+            ],
+            "tired_busy": [
+              "Power can rest today.",
+              "Nothing to prove."
+            ],
+            "curious": [
+              "Notice how calm power feels.",
+              "This is mature wealth."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 21,
+      "blocks": [
+        {
+          "id": "day21_week3",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Three weeks in, identity shifts deepen.",
+              "Notice the steadiness."
+            ],
+            "stressed": [
+              "Less reactivity is progress.",
+              "Even if subtle."
+            ],
+            "tired_busy": [
+              "You don’t need to reflect today.",
+              "Just be here."
+            ],
+            "curious": [
+              "Observe changes without naming them.",
+              "They’re integrating."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 22,
+      "blocks": [
+        {
+          "id": "day22_choice",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity supports clear choice.",
+              "Not reactive choice."
+            ],
+            "stressed": [
+              "Choice expands as pressure reduces.",
+              "Notice that."
+            ],
+            "tired_busy": [
+              "Choice doesn’t require action today.",
+              "Just awareness."
+            ],
+            "curious": [
+              "Explore how identity affects decisions.",
+              "This matters."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 23,
+      "blocks": [
+        {
+          "id": "day23_future",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity relates calmly to the future.",
+              "Less urgency."
+            ],
+            "stressed": [
+              "The future doesn’t need controlling today.",
+              "Trust builds here."
+            ],
+            "tired_busy": [
+              "You don’t need to plan today.",
+              "Rest in now."
+            ],
+            "curious": [
+              "Observe how future thinking feels now.",
+              "Identity shows here."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 24,
+      "blocks": [
+        {
+          "id": "day24_consistency",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity values consistency.",
+              "Not intensity."
+            ],
+            "stressed": [
+              "Consistency feels safer than bursts.",
+              "Notice that."
+            ],
+            "tired_busy": [
+              "Consistency can be gentle.",
+              "No push needed."
+            ],
+            "curious": [
+              "Explore consistency as a stabilizer.",
+              "This is sustainable."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 25,
+      "blocks": [
+        {
+          "id": "day25_selfrespect",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity includes self-respect.",
+              "Boundaries matter."
+            ],
+            "stressed": [
+              "Self-respect reduces money anxiety.",
+              "Notice how."
+            ],
+            "tired_busy": [
+              "Boundaries can rest today.",
+              "Just acknowledgment."
+            ],
+            "curious": [
+              "Explore self-respect as wealth support.",
+              "It’s foundational."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 26,
+      "blocks": [
+        {
+          "id": "day26_flow",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity trusts flow.",
+              "Not constant effort."
+            ],
+            "stressed": [
+              "Effort without rest drains wealth energy.",
+              "Flow restores it."
+            ],
+            "tired_busy": [
+              "You don’t need to flow today.",
+              "Just stop resisting."
+            ],
+            "curious": [
+              "Observe where flow already exists.",
+              "Identity aligns there."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 27,
+      "blocks": [
+        {
+          "id": "day27_resilience",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity includes resilience.",
+              "Not perfection."
+            ],
+            "stressed": [
+              "Setbacks don’t erase progress.",
+              "They reveal resilience."
+            ],
+            "tired_busy": [
+              "Resilience can be quiet today.",
+              "No action needed."
+            ],
+            "curious": [
+              "Notice resilience in your story.",
+              "This is wealth."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 28,
+      "blocks": [
+        {
+          "id": "day28_integration",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Integration happens subtly.",
+              "Notice the calm."
+            ],
+            "stressed": [
+              "Less reactivity means growth.",
+              "Even if unnoticed."
+            ],
+            "tired_busy": [
+              "You don’t need to feel complete.",
+              "Just present."
+            ],
+            "curious": [
+              "Observe how wealth feels now.",
+              "Identity has shifted."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 29,
+      "blocks": [
+        {
+          "id": "day29_continuity",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "Wealth identity continues beyond programs.",
+              "This is a baseline now."
+            ],
+            "stressed": [
+              "You don’t lose this shift.",
+              "It’s internal."
+            ],
+            "tired_busy": [
+              "Nothing ends today.",
+              "It integrates."
+            ],
+            "curious": [
+              "Notice continuity rather than completion.",
+              "This is mature wealth."
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "day": 30,
+      "blocks": [
+        {
+          "id": "day30_completion",
+          "type": "coach_message",
+          "messagesByMood": {
+            "fine": [
+              "This concludes Wealth Identity Deepening.",
+              "Notice what feels more stable."
+            ],
+            "stressed": [
+              "Completion doesn’t mean effort.",
+              "It means integration."
+            ],
+            "tired_busy": [
+              "Quiet completion is enough.",
+              "You’ve done this."
+            ],
+            "curious": [
+              "Reflect on how your relationship with wealth has changed.",
+              "This identity continues."
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
