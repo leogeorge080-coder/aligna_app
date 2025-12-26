@@ -19,7 +19,7 @@ class LlmService {
   static Future<CoachReply> getCoachReply({
     required String intention,
     required AlignaMood mood,
-    required AlignaLanguage language,
+    required String language,
     String? mode,
     int? day,
     String? coreIntention,
@@ -49,7 +49,7 @@ class LlmService {
     required int day, // 1..21
     required String coreIntention,
     required AlignaMood mood,
-    required AlignaLanguage language,
+    required String language,
   }) async {
     return _callCoachFunction(
       payload: {
@@ -110,17 +110,8 @@ class LlmService {
     );
   }
 
-  static String _langCode(AlignaLanguage language) {
-    // Prefer a stable code mapping (avoid relying on enum.name if you ever rename)
-    switch (language) {
-      case AlignaLanguage.en:
-        return 'en';
-      case AlignaLanguage.ar:
-        return 'ar';
-      case AlignaLanguage.hi:
-        return 'hi';
-      case AlignaLanguage.es:
-        return 'es';
-    }
+  static String _langCode(String language) {
+    // Language is already a string code
+    return language;
   }
 }

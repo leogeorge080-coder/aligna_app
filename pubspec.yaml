@@ -12,6 +12,7 @@ dependencies:
     sdk: flutter
   http: ^1.2.0
   
+  supabase_flutter: ^2.5.8
   
   shared_preferences: ^2.2.3
 
@@ -26,8 +27,24 @@ dependencies:
   # Sharing
   share_plus: ^10.0.0
 
+  # Vibration for haptic feedback
+  vibration: ^2.0.0
+
+  # Video player for coach videos
+  video_player: ^2.8.6
+
+  # Image handling
+  image_picker: ^1.1.2
+
+  # Fonts
+  google_fonts: ^6.2.1
+
+  # Audio player for reactive aura
+  audioplayers: ^6.0.0
+
   # iOS style icons
   cupertino_icons: ^1.0.8
+  sensors_plus: ^7.0.0
 
 dev_dependencies:
   flutter_test:
@@ -36,9 +53,11 @@ dev_dependencies:
   flutter_launcher_icons: ^0.13.1
 
 flutter:
+  uses-material-design: true
   assets:
-    - assets/data/program_catalogue.json
-    - assets/data/program_scripts/
+    - assets/videos/
+    - assets/coach/
+    - assets/icon/
 flutter_icons:
   android: true
   ios: true

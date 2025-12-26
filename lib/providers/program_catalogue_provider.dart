@@ -1,13 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/program_catalogue_loader.dart';
-import '../models/program_catalogue_item.dart';
+import '../models/program.dart';
+import '../services/program_service.dart';
 
-final programCatalogueProvider = FutureProvider<List<ProgramCatalogueItem>>((
-  ref,
-) async {
-  final raw =
-      await ProgramCatalogueLoader.load(); // returns List<Map<String,dynamic>>
-  return raw
-      .map((m) => ProgramCatalogueItem.fromJson(m))
-      .toList(growable: false);
+final programCatalogueProvider = FutureProvider<List<Program>>((ref) async {
+  return await ProgramService.getAllPrograms();
 });

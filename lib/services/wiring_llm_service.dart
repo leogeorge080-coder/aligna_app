@@ -10,7 +10,7 @@ class WiringLlmService {
     required int day,
     required String coreIntention,
     required AlignaMood mood,
-    required AlignaLanguage language,
+    required String language,
   }) {
     // Stable cache key for program enhancement
     final programId = 'wiring'; // placeholder for wiring program
@@ -26,7 +26,7 @@ class WiringLlmService {
     required int day,
     required String coreIntention,
     required AlignaMood mood,
-    required AlignaLanguage language,
+    required String language,
   }) async {
     final key = _cacheKey(
       day: day,

@@ -1,8 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../models/program_catalogue_item.dart';
+import '../services/program_service.dart';
 import 'active_program_provider.dart';
-import 'program_catalogue_provider.dart';
 import 'program_progress_store_provider.dart';
 
 class ProgramProgressUi {
@@ -26,22 +25,11 @@ final programProgressProvider = FutureProvider<ProgramProgressUi?>((ref) async {
   final activeProgramId = await ref.watch(activeProgramIdProvider.future);
   if (activeProgramId == null) return null;
 
-  // 2) Catalogue list
-  final List<ProgramCatalogueItem> catalogue = await ref.watch(
-    programCatalogueProvider.future,
-  );
+  // 2) Get program details from Supabase
+  final program = await ProgramService.getProgramObjectById(activeProgramId);
+  if (program == null) return null;
 
-  // Find meta safely (no firstWhere casting hacks)
-  ProgramCatalogueItem? meta;
-  for (final p in catalogue) {
-    if (p.programId == activeProgramId) {
-      meta = p;
-      break;
-    }
-  }
-  if (meta == null) return null;
-
-  final totalDays = meta.durationDays;
+  final totalDays = program.durationDays;
 
   // 3) Start date (async)
   final store = ref.read(programProgressStoreProvider);

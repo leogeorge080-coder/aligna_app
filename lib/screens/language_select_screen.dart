@@ -14,7 +14,7 @@ class LanguageSelectScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = L10n.of(ref);
 
-    Future<void> setLang(AlignaLanguage lang) async {
+    Future<void> setLang(String lang) async {
       ref.read(languageProvider.notifier).state = lang;
       await Prefs.saveLang(lang);
     }
@@ -41,7 +41,7 @@ class LanguageSelectScreen extends ConsumerWidget {
               subtitle: 'Recommended',
               onTap: () async {
                 await AppHaptics.tap();
-                await setLang(AlignaLanguage.en);
+                await setLang('en');
               },
             ),
             ChoiceCard(
@@ -49,7 +49,7 @@ class LanguageSelectScreen extends ConsumerWidget {
               subtitle: 'Arabic (RTL)',
               onTap: () async {
                 await AppHaptics.tap();
-                await setLang(AlignaLanguage.ar);
+                await setLang('ar');
               },
             ),
             ChoiceCard(
@@ -57,7 +57,7 @@ class LanguageSelectScreen extends ConsumerWidget {
               subtitle: 'Hindi',
               onTap: () async {
                 await AppHaptics.tap();
-                await setLang(AlignaLanguage.hi);
+                await setLang('hi');
               },
             ),
             ChoiceCard(
@@ -65,7 +65,7 @@ class LanguageSelectScreen extends ConsumerWidget {
               subtitle: 'Spanish',
               onTap: () async {
                 await AppHaptics.tap();
-                await setLang(AlignaLanguage.es);
+                await setLang('es');
               },
             ),
           ],

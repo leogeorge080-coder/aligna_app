@@ -2,10 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/program_catalogue_loader.dart';
-import '../models/program_catalogue_item.dart';
+import '../models/program.dart';
 import '../persistence/prefs.dart';
 import '../providers/app_providers.dart';
+import '../services/program_service.dart';
 
 class ProgramsScreen extends ConsumerStatefulWidget {
   const ProgramsScreen({super.key});
@@ -16,12 +16,12 @@ class ProgramsScreen extends ConsumerStatefulWidget {
 
 class _ProgramsScreenState extends ConsumerState<ProgramsScreen> {
   String _tab = 'money';
+  late Future<List<Program>> _programsFuture;
 
-  Future<List<ProgramCatalogueItem>> _load() async {
-    final raw = await ProgramCatalogueLoader.load();
-    return raw
-        .map((m) => ProgramCatalogueItem.fromJson(m))
-        .toList(growable: false);
+  @override
+  void initState() {
+    super.initState();
+    _programsFuture = ProgramService.getAllPrograms();
   }
 
   @override
@@ -32,13 +32,15 @@ class _ProgramsScreenState extends ConsumerState<ProgramsScreen> {
         actions: [
           IconButton(
             tooltip: 'Refresh',
-            onPressed: () => setState(() {}),
+            onPressed: () => setState(() {
+              _programsFuture = ProgramService.getAllPrograms();
+            }),
             icon: const Icon(Icons.refresh),
           ),
         ],
       ),
-      body: FutureBuilder<List<ProgramCatalogueItem>>(
-        future: _load(),
+      body: FutureBuilder<List<Program>>(
+        future: _programsFuture,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
@@ -53,14 +55,26 @@ class _ProgramsScreenState extends ConsumerState<ProgramsScreen> {
           final items = (snap.data ?? [])
             ..sort((a, b) => a.durationDays.compareTo(b.durationDays));
 
+          print('📋 [ProgramsScreen] Loaded ${items.length} programs');
+          for (final p in items) {
+            print(
+              '📋 [ProgramsScreen] Program: ${p.title} (${p.id}) - track: ${p.track}',
+            );
+          }
+
           final activeId = ref.watch(activeProgramIdProvider);
+          print('📋 [ProgramsScreen] Active ID: $activeId');
 
           final active = activeId == null
               ? null
               : items
-                    .where((p) => p.programId == activeId)
-                    .cast<ProgramCatalogueItem?>()
+                    .where((p) => p.id == activeId)
+                    .cast<Program?>()
                     .firstOrNull;
+
+          print(
+            '📋 [ProgramsScreen] Active program found: ${active != null ? active.title : 'null'}',
+          );
 
           // Tabs (track filter)
           // Note: keep compatibility with older track naming:
@@ -75,7 +89,7 @@ class _ProgramsScreenState extends ConsumerState<ProgramsScreen> {
             ('purpose', 'Purpose'),
           ];
 
-          bool _matchesTab(ProgramCatalogueItem p) {
+          bool matchesTab(Program p) {
             final t = p.track;
 
             switch (_tab) {
@@ -87,8 +101,16 @@ class _ProgramsScreenState extends ConsumerState<ProgramsScreen> {
             }
           }
 
-          final filtered = items.where(_matchesTab).toList()
+          final filtered = items.where(matchesTab).toList()
             ..sort((a, b) => a.durationDays.compareTo(b.durationDays));
+
+          print('📋 [ProgramsScreen] Current tab: $_tab');
+          print('📋 [ProgramsScreen] Filtered programs: ${filtered.length}');
+          for (final p in filtered) {
+            print(
+              '📋 [ProgramsScreen] Filtered: ${p.title} - track: ${p.track}',
+            );
+          }
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
@@ -138,8 +160,8 @@ class _ProgramsScreenState extends ConsumerState<ProgramsScreen> {
               for (final p in filtered) ...[
                 _ProgramTile(
                   p: p,
-                  isActive: p.programId == activeId,
-                  onPick: () => _selectProgram(p.programId),
+                  isActive: p.id == activeId,
+                  onPick: () => _selectProgram(p.id),
                 ),
                 const Divider(height: 1),
               ],
@@ -167,7 +189,7 @@ class _ActiveProgramCard extends StatelessWidget {
     required this.onClear,
   });
 
-  final ProgramCatalogueItem? active;
+  final Program? active;
   final String activeId;
   final VoidCallback onResume;
   final VoidCallback onClear;
@@ -177,7 +199,7 @@ class _ActiveProgramCard extends StatelessWidget {
     final title = active?.title ?? activeId;
     final sub = active == null
         ? 'Resume your active program.'
-        : '${active!.durationDays} days • ${active!.shortDescription}';
+        : '${active!.durationDays} days • ${active!.description}';
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -225,7 +247,7 @@ class _ProgramTile extends StatelessWidget {
     required this.onPick,
   });
 
-  final ProgramCatalogueItem p;
+  final Program p;
   final bool isActive;
   final VoidCallback onPick;
 
@@ -261,7 +283,7 @@ class _ProgramTile extends StatelessWidget {
             ),
         ],
       ),
-      subtitle: Text('${p.durationDays} days • ${p.shortDescription}'),
+      subtitle: Text('${p.durationDays} days • ${p.description}'),
       trailing: const Icon(Icons.chevron_right),
       onTap: onPick,
     );

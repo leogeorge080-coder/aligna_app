@@ -1,8 +1,10 @@
 // lib/screens/app_shell.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../providers/app_providers.dart';
+import '../theme/aligna_theme.dart';
 import 'coach_home_screen.dart';
 import 'programs_screen.dart';
 import 'settings_screen.dart';
@@ -19,24 +21,40 @@ class AppShell extends ConsumerWidget {
         index: index,
         children: const [CoachHomeScreen(), ProgramsScreen(), SettingsScreen()],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: index,
-        onDestinationSelected: (i) =>
-            ref.read(shellTabIndexProvider.notifier).state = i,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.chat_bubble_outline),
-            label: 'Coach',
+      bottomNavigationBar: Theme(
+        data: Theme.of(context).copyWith(
+          navigationBarTheme: NavigationBarThemeData(
+            labelTextStyle: MaterialStateProperty.resolveWith<TextStyle>((
+              Set<MaterialState> states,
+            ) {
+              if (states.contains(MaterialState.selected)) {
+                return GoogleFonts.montserrat(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AlignaColors.radiantGold,
+                );
+              }
+              return GoogleFonts.montserrat(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: AlignaColors.subtext,
+              );
+            }),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.grid_view_rounded),
-            label: 'Programs',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            label: 'Settings',
-          ),
-        ],
+        ),
+        child: NavigationBar(
+          selectedIndex: index,
+          onDestinationSelected: (i) =>
+              ref.read(shellTabIndexProvider.notifier).state = i,
+          destinations: const [
+            NavigationDestination(icon: Icon(Icons.home), label: 'Coach'),
+            NavigationDestination(icon: Icon(Icons.list), label: 'Programs'),
+            NavigationDestination(
+              icon: Icon(Icons.settings),
+              label: 'Settings',
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../persistence/prefs.dart';
 import '../services/wiring_content.dart';
+import '../services/daily_content_service.dart';
 import '../models/wiring_program.dart';
+import 'app_providers.dart';
 
 String _todayKey() {
   final now = DateTime.now();
@@ -16,10 +18,30 @@ final wiringDayProvider = StateProvider<int?>((ref) => null);
 final wiringLastDoneProvider = StateProvider<String?>((ref) => null);
 final wiringCoreIntentionProvider = StateProvider<String?>((ref) => null);
 
-final wiringContentProvider = Provider<WiringDayContent?>((ref) {
+final wiringContentProvider = FutureProvider<WiringDayContent?>((ref) async {
   final day = ref.watch(wiringDayProvider);
   if (day == null) return null;
 
+  final languageCode = ref.watch(languageProvider) ?? 'en';
+
+  // Try to fetch from Supabase first
+  final dailyContent = await DailyContentService.fetchDayContent(
+    programId: 'wiring',
+    dayNumber: day,
+    languageCode: languageCode,
+  );
+
+  if (dailyContent != null) {
+    return WiringDayContent(
+      day: dailyContent.dayNumber,
+      title: dailyContent.title,
+      focus: dailyContent.focus,
+      question: dailyContent.question,
+      microAction: dailyContent.microAction,
+    );
+  }
+
+  // Fallback to hardcoded content if Supabase fails
   return WiringContent.forDay(day);
 });
 

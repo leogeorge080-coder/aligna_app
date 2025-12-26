@@ -1,13 +1,16 @@
 // lib/screens/bootstrap_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../providers/app_providers.dart';
 import '../persistence/prefs.dart';
 import '../theme/aligna_theme.dart';
 
-import 'language_select_screen.dart';
+import 'language_sanctuary_screen.dart';
+import 'name_entry_screen.dart';
 import 'mood_select_screen.dart';
+import 'onboarding_quiz_screen.dart';
 import 'app_shell.dart';
 
 class AlignaBootstrapScreen extends ConsumerStatefulWidget {
@@ -28,21 +31,51 @@ class _AlignaBootstrapScreenState extends ConsumerState<AlignaBootstrapScreen> {
   }
 
   Future<void> _bootstrap() async {
-    // 1) Language: show LanguageSelectScreen only if not chosen yet
-    final lang = await Prefs.loadLang();
+    // 1) Language: load from prefs first, then check Supabase
+    String? lang = await Prefs.loadLang();
+
+    // 2) Load user profile data from Supabase if authenticated
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      try {
+        final response = await Supabase.instance.client
+            .from('profiles')
+            .select('preferred_language, name')
+            .eq('id', user.id)
+            .single();
+
+        // Use Supabase language if available, otherwise keep prefs value
+        if (response['preferred_language'] != null) {
+          lang = response['preferred_language'];
+        }
+
+        // Load user name
+        if (response['name'] != null) {
+          ref.read(userNameProvider.notifier).state = response['name'];
+        }
+      } catch (e) {
+        // Handle error silently - will fall back to prefs/local data
+      }
+    }
+
     ref.read(languageProvider.notifier).state = lang;
 
-    // 2) Mood: valid only for current greeting window
+    // 3) Mood: valid only for current greeting window
     final mood = await Prefs.loadMoodForNow();
     ref.read(moodProvider.notifier).state = mood;
 
-    // 3) Active program
+    // 4) Active program
     final activeProgramId = await Prefs.loadActiveProgramId();
     ref
         .read(activeProgramIdProvider.notifier)
         .state = (activeProgramId == null || activeProgramId.trim().isEmpty)
         ? null
         : activeProgramId;
+
+    // 5) Onboarding completion
+    final onboardingCompleted =
+        activeProgramId != null && activeProgramId.isNotEmpty;
+    ref.read(onboardingCompletedProvider.notifier).state = onboardingCompleted;
 
     if (!mounted) return;
     setState(() => _loaded = true);
@@ -58,9 +91,13 @@ class _AlignaBootstrapScreenState extends ConsumerState<AlignaBootstrapScreen> {
     }
 
     final lang = ref.watch(languageProvider);
+    final userName = ref.watch(userNameProvider);
     final mood = ref.watch(moodProvider);
+    final onboardingCompleted = ref.watch(onboardingCompletedProvider);
 
-    if (lang == null) return const LanguageSelectScreen();
+    if (lang == null) return const LanguageSanctuaryScreen();
+    if (userName == null) return const NameEntryScreen();
+    if (!onboardingCompleted) return const OnboardingQuizScreen();
     if (mood == null) return const MoodSelectScreen();
     return const AppShell();
   }

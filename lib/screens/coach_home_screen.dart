@@ -2,16 +2,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// ─────────────────────────────────────────────
-// Program engine (script-driven coach)
-// ─────────────────────────────────────────────
+import '../providers/program_providers.dart';
 import '../models/program_session.dart';
 import '../providers/program_session_bundle_provider.dart';
 import '../providers/program_progress_actions_provider.dart';
 import '../providers/program_catalogue_provider.dart';
 import '../providers/program_progress_provider.dart';
+import '../providers/program_progress_store_provider.dart';
 import '../providers/resume_copy_provider.dart';
 import '../models/program_progress.dart';
 import '../models/program_resume_plan.dart';
@@ -38,10 +38,20 @@ import '../theme/aligna_theme.dart';
 import '../utils/haptics.dart';
 import '../widgets/coach_bubble.dart';
 import '../widgets/typing_bubble.dart';
+import 'coach_video_screen.dart';
+import 'celebration_screen.dart';
+import '../services/journal_service.dart';
 import '../widgets/calm_cue.dart';
 import '../widgets/program_picker_sheet.dart';
-import '../widgets/aura_widget.dart';
+import '../widgets/animated_gradient_background.dart';
+import '../widgets/coach_widgets.dart';
 import '../widgets/staggered_coach_bubbles.dart';
+import 'welcome_celebration_screen.dart';
+import '../models/program_type.dart';
+import '../widgets/reactive_aura_widget.dart';
+import '../services/program_service.dart';
+import '../providers/daily_content_provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class CoachHomeScreen extends ConsumerStatefulWidget {
   const CoachHomeScreen({super.key});
@@ -50,7 +60,8 @@ class CoachHomeScreen extends ConsumerStatefulWidget {
   ConsumerState<CoachHomeScreen> createState() => _CoachHomeScreenState();
 }
 
-class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen> {
+class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
+    with TickerProviderStateMixin {
   final TextEditingController _controller = TextEditingController();
 
   Timer? _expiryTimer;
@@ -62,28 +73,164 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen> {
   // Simple UI toggle (fully open mode: both available)
   final ProgramTimeOfDay _timeOfDay = ProgramTimeOfDay.morning;
 
+  // Dynamic greeting state
+  String _currentGreeting = '';
+  String _currentMotivation = '';
+  // late AnimationController _greetingController;
+  // late Animation<double> _greetingSlideAnimation;
+
+  // Animation states
+  double _greetingOpacity = 0.0;
+  double _progressValue = 0.0;
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  // Daily refresh timer
+  Timer? _dailyRefreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize pulse animation
+    _pulseController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
+    // Initialize greeting animation
+    // _greetingController = AnimationController(
+    //   duration: const Duration(milliseconds: 800),
+    //   vsync: this,
+    // );
+    // _greetingSlideAnimation = Tween<double>(begin: -50.0, end: 0.0).animate(
+    //   CurvedAnimation(parent: _greetingController, curve: Curves.elasticOut),
+    // );
+
+    // Generate dynamic greeting
+    _generateDynamicGreeting();
+
+    // Start greeting animation
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        // _greetingController.forward();
+        setState(() {
+          _greetingOpacity = 1.0;
+        });
+      }
+    });
+
+    // Start progress circle fill animation
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      if (mounted) {
+        setState(() {
+          _progressValue = 0.7; // TODO: Use actual progress
+        });
+      }
+    });
+
+    // Set up daily refresh timer
+    _scheduleDailyRefresh();
+
+    // Check for welcome celebration
+    _checkAndShowWelcome();
+
+    // Pre-cache audio for active program
+    _preCacheAudio();
+  }
+
+  void _generateDynamicGreeting() {
+    final now = DateTime.now();
+    final hour = now.hour;
+    final userName = ref.read(app.userNameProvider) ?? 'there';
+
+    // Time-based greeting variations
+    String timeGreeting;
+    String motivation;
+
+    if (hour < 12) {
+      timeGreeting = 'Good morning';
+      motivation = 'Your vibration is rising beautifully.';
+    } else if (hour < 17) {
+      timeGreeting = 'Good afternoon';
+      motivation = 'You\'re doing amazing work.';
+    } else {
+      timeGreeting = 'Good evening';
+      motivation = 'Your energy is transforming everything.';
+    }
+
+    // Add emotional variations based on progress (simplified for now)
+    final emotionalVariations = [
+      'Your vibration is rising beautifully.',
+      'You\'re doing amazing work.',
+      'Your energy is transforming everything.',
+      'You\'re becoming more aligned every day.',
+      'Your presence is making a difference.',
+      'You\'re exactly where you need to be.',
+    ];
+
+    motivation = emotionalVariations[now.day % emotionalVariations.length];
+
+    _currentGreeting = '$timeGreeting, $userName.';
+    _currentMotivation = motivation;
+  }
+
+  Future<void> _preCacheAudio() async {
+    final activeProgramId = ref.read(app.activeProgramIdProvider);
+    if (activeProgramId != null) {
+      // Start fetching daily content (including audio URL) in background
+      // This will cache the data so it's ready when user starts session
+      try {
+        await ref.read(dailyContentProvider(activeProgramId).future);
+      } catch (e) {
+        // Silently fail - pre-caching is best effort
+        // User will still get proper error handling when they actually try to play
+      }
+    }
+  }
+
+  Future<void> _checkAndShowWelcome() async {
+    final onboardingCompleted = ref.read(app.onboardingCompletedProvider);
+    final welcomeShown = await Prefs.getWelcomeShown();
+    final userName = ref.read(app.userNameProvider);
+
+    if (onboardingCompleted && !welcomeShown && userName != null && mounted) {
+      // Show welcome celebration
+      await Future.delayed(
+        const Duration(milliseconds: 1500),
+      ); // Wait for screen to settle
+      if (mounted) {
+        await AppHaptics.success();
+        await Navigator.of(context).push(
+          PageRouteBuilder(
+            opaque: false,
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                WelcomeCelebrationScreen(userName: userName),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
+          ),
+        );
+        // Mark welcome as shown
+        await Prefs.saveWelcomeShown(true);
+      }
+    }
+  }
+
   @override
   void dispose() {
+    _pulseController.dispose();
+    // _greetingController.dispose();
+    _dailyRefreshTimer?.cancel();
     _expiryTimer?.cancel();
     _controller.dispose();
     for (final c in _reflectionControllers.values) {
       c.dispose();
     }
     super.dispose();
-  }
-
-  // Map app mood (calm/stressed/tired/motivated) -> program mood
-  String _mapMood(app.AlignaMood m) {
-    switch (m) {
-      case app.AlignaMood.stressed:
-        return 'stressed';
-      case app.AlignaMood.tired:
-        return 'tired';
-      case app.AlignaMood.motivated:
-        return 'motivated';
-      case app.AlignaMood.calm:
-        return 'calm';
-    }
   }
 
   Future<void> _endSessionUiOnly() async {
@@ -100,7 +247,34 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen> {
     });
   }
 
-  void _ensureReflectionLoaded(String programId, int day) async {
+  void _scheduleDailyRefresh() {
+    final now = DateTime.now();
+    final tomorrow = DateTime(
+      now.year,
+      now.month,
+      now.day + 1,
+      0,
+      0,
+      0,
+    ); // 12:00 AM tomorrow
+    final duration = tomorrow.difference(now);
+
+    _dailyRefreshTimer = Timer(duration, () {
+      _refreshDailyIntention(ref);
+      // Schedule next refresh
+      _scheduleDailyRefresh();
+    });
+  }
+
+  void _refreshDailyIntention(WidgetRef ref) {
+    // TODO: Fetch daily intention from server
+    // For now, just invalidate relevant providers to refresh data
+    ref.invalidate(programCatalogueProvider);
+    ref.invalidate(programProgressProvider);
+    // Add any other providers that need daily refresh
+  }
+
+  Future<void> _ensureReflectionLoaded(String programId, int day) async {
     final key = '${programId}_$day';
     if (_reflectionControllers.containsKey(key)) return;
 
@@ -123,16 +297,69 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen> {
       );
     }
 
-    return TextField(
-      controller: c,
-      maxLines: 3,
-      decoration: const InputDecoration(
-        hintText: 'Your reflection...',
-        border: OutlineInputBorder(),
-      ),
-      onSubmitted: (value) async {
-        await Prefs.saveReflection(programId, day, value);
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: c,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            hintText: 'Your reflection...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerRight,
+          child: ElevatedButton.icon(
+            onPressed: () async {
+              final value = c.text.trim();
+              if (value.isEmpty) return;
+
+              // Save to local prefs as backup
+              await Prefs.saveReflection(programId, day, value);
+
+              // Get current user and program IDs
+              final userId = JournalService.getCurrentUserId();
+              final activeProgramId = ref.read(app.activeProgramIdProvider);
+
+              if (userId != null && activeProgramId != null) {
+                // Save to database
+                final success = await JournalService.saveJournalEntry(
+                  userId: userId,
+                  programId: activeProgramId,
+                  dayNumber: day,
+                  journalEntryText: value,
+                );
+
+                if (success && mounted) {
+                  // Show celebration screen
+                  await Navigator.of(context).push(
+                    PageRouteBuilder(
+                      opaque: false,
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          CelebrationScreen(journalText: value, dayNumber: day),
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) {
+                            return FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            );
+                          },
+                    ),
+                  );
+                }
+              }
+            },
+            icon: const Icon(Icons.save),
+            label: const Text('Save Reflection'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AlignaColors.radiantGold,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -150,99 +377,19 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen> {
               : s.resumeCopy.neutral)
         : null;
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (resumeLine != null) ...[
-            CoachBubble(text: resumeLine),
-            const SizedBox(height: 12),
-          ],
-          StaggeredCoachBubbles(messages: s.messages),
-          if (s.microAction != null) ...[
-            const SizedBox(height: 8),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      s.microAction!.title.isEmpty
-                          ? "One aligned step"
-                          : s.microAction!.title,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(s.microAction!.instruction),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: () async {
-                        final actions = ref.read(
-                          programProgressActionsProvider,
-                        );
-                        await actions.markCompleted(
-                          current: bundle.progress,
-                          completedDay: s.day,
-                          durationDays: req.durationDays,
-                        );
-                        ref.invalidate(programSessionBundleProvider(req));
-                      },
-                      child: const Text("Start"),
-                    ),
-                    TextButton(
-                      onPressed: () async {
-                        // Gentle: end the UI session only
-                        await _endSessionUiOnly();
-                      },
-                      child: const Text("Not today"),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-          if (s.reflection != null) ...[
-            const SizedBox(height: 16),
-            Text(
-              s.reflection!.prompt,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            if (s.reflection!.exampleAnswers.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Examples:',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic),
-              ),
-              const SizedBox(height: 4),
-              for (final example in s.reflection!.exampleAnswers) ...[
-                Text(
-                  '• $example',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ],
-            _buildReflectionField(req.programId, s.day),
-          ],
-        ],
-      ),
-    );
+    return const Text('Program Session Placeholder');
   }
 
   // Robust extractors for both Map-based and typed catalogue models
   String? _catalogueProgramId(dynamic item) {
     if (item == null) return null;
     if (item is Map) {
-      final v = item['programId'];
+      final v = item['programId'] ?? item['id'];
       return v is String && v.trim().isNotEmpty ? v : null;
     }
     try {
-      final v = (item as dynamic).programId;
+      // Try programId first (legacy), then id (new Program model)
+      final v = (item as dynamic).programId ?? (item as dynamic).id;
       return v is String && v.trim().isNotEmpty ? v : null;
     } catch (_) {
       return null;
@@ -263,17 +410,35 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen> {
     }
   }
 
+  String _extractTitle(dynamic item) {
+    if (item == null) return 'Program';
+    if (item is Map) {
+      final v = item['title'];
+      return v is String && v.trim().isNotEmpty ? v : 'Program';
+    }
+    try {
+      final v = (item as dynamic).title;
+      return v is String && v.trim().isNotEmpty ? v : 'Program';
+    } catch (_) {
+      return 'Program';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = L10n.of(ref);
 
     final appMood = ref.watch(app.moodProvider);
+    final heartMood = ref.watch(app.heartMoodProvider);
     final replyState = ref.watch(coachLlmProvider);
 
     final actionText = ref.watch(microActionTextProvider);
     final actionStatus = ref.watch(microActionStatusProvider);
 
     final catalogueAsync = ref.watch(programCatalogueProvider);
+
+    // Get user name from onboarding
+    final userName = ref.watch(app.userNameProvider) ?? 'User';
 
     // IMPORTANT: treat empty string as null (common prefs bug source)
     final rawActiveId = ref.watch(app.activeProgramIdProvider);
@@ -285,745 +450,599 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen> {
         ? const AsyncValue.data(null)
         : ref.watch(programProgressProvider);
 
+    // Get raw progress data for completion check
+    final rawProgressAsync = activeId == null
+        ? const AsyncValue.data(null)
+        : ref.watch(
+            FutureProvider<ProgramProgress?>((ref) async {
+              final store = ref.read(programProgressStoreProvider);
+              return await store.read(activeId!);
+            }),
+          );
+
     final resumeAsync = activeId == null
         ? const AsyncValue.data(
             ResumeCopyResult(text: null, shouldMarkShown: false),
           )
         : ref.watch(resumeCopyProvider);
 
-    // If mood is missing, show a calm recovery (do not pop routes).
-    if (appMood == null) {
-      return Scaffold(
-        appBar: AppBar(title: Text(t.coachTitle)),
-        body: ListView(
-          padding: const EdgeInsets.all(16),
-          children: const [
-            CoachBubble(text: "Choose your mood to begin."),
-            SizedBox(height: 10),
-            CoachBubble(
-              text:
-                  "If you just opened the app, close it fully and reopen. Mood is selected at start.",
-            ),
-          ],
-        ),
-      );
-    }
+    // Fetch daily content for day 1 using onboarding data
+    final dailyContentAsync = activeId == null
+        ? const AsyncValue.data(null)
+        : ref.watch(
+            dailyContentForProgramDayProvider((
+              programId: activeId,
+              dayNumber: 1,
+            )),
+          );
 
+    // Fetch program details for theme color
+    final programDetailsAsync = activeId == null
+        ? const AsyncValue.data(null)
+        : ref.watch(
+            FutureProvider<Map<String, dynamic>?>((ref) async {
+              return await ProgramService.getProgramById(activeId);
+            }),
+          );
+
+    // Get theme color for dynamic button styling
+    final themeColorAsync = activeId == null
+        ? const AsyncValue.data(null)
+        : ref.watch(programThemeColorProvider(activeId));
+
+    // Initialize from onboarding data instead of mood
     return Scaffold(
-      appBar: AppBar(
-        title: Text(t.coachTitle),
-        actions: [
-          IconButton(
-            tooltip: 'Programs',
-            icon: const Icon(Icons.grid_view_outlined),
-            onPressed: () async {
-              final items = await ref.read(programCatalogueProvider.future);
-              if (!context.mounted) return;
-
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                builder: (_) {
-                  return ProgramPickerSheet(
-                    items: items,
-                    isPro: false,
-                    onUpsellRequested: () {},
-                    onPick: (item) async {
-                      final pid = _catalogueProgramId(item);
-                      if (pid == null) {
-                        debugPrint('[PROGRAM] pick failed: null programId');
-                        return;
-                      }
-                      await Prefs.setActiveProgramId(pid);
-                      ref.read(app.activeProgramIdProvider.notifier).state =
-                          pid;
-                      if (context.mounted) Navigator.pop(context);
-                    },
-                  );
-                },
-              );
-            },
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Greeting
-          CoachBubble(text: t.moodLine(appMood)),
-          const SizedBox(height: 10),
-
-          // Resume microcopy (silent loading/error)
-          resumeAsync.when(
-            data: (res) {
-              if (res.text == null) return const SizedBox.shrink();
-              if (res.shouldMarkShown) {
-                final markShown = ref.read(markResumeCopyShownProvider);
-                WidgetsBinding.instance.addPostFrameCallback(
-                  (_) => markShown(),
-                );
-              }
-              return Padding(
-                padding: const EdgeInsets.only(top: 6, bottom: 6),
-                child: Text(res.text!),
-              );
-            },
-            loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
-          ),
-
-          // Day X of Y (silent loading/error)
-          progressAsync.when(
-            data: (progress) {
-              if (progress == null) return const SizedBox.shrink();
-              final text = progress.isComplete
-                  ? 'Final day · ${progress.totalDays} of ${progress.totalDays}'
-                  : 'Day ${progress.day} of ${progress.totalDays}';
-              return Padding(
-                padding: const EdgeInsets.only(top: 6, bottom: 10),
-                child: Text(
-                  text,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.6),
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.2,
+      backgroundColor: Colors.transparent,
+      body: AnimatedGradientBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                // Section A: The Greeting (Header)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Small profile icon on the top left
+                      const CircleAvatar(
+                        radius: 20,
+                        backgroundColor: AlignaColors.accent,
+                        child: Icon(Icons.person, color: Colors.white),
+                      ),
+                      // "Notification bell" on the top right
+                      IconButton(
+                        icon: const Icon(Icons.notifications_outlined),
+                        onPressed: () {
+                          // TODO: Implement notification action
+                        },
+                      ),
+                    ],
                   ),
                 ),
-              );
-            },
-            loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Active program state (single source of truth)
-          Builder(
-            builder: (context) {
-              final isProgramMode = activeId != null;
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (isProgramMode)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                // Dynamic greeting with slide animation
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: AnimatedOpacity(
+                    opacity: _greetingOpacity,
+                    duration: const Duration(milliseconds: 500),
+                    child: Column(
                       children: [
-                        Text(
-                          'Program active',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        TextButton(
-                          onPressed: () =>
-                              ref
-                                      .read(app.shellTabIndexProvider.notifier)
-                                      .state =
-                                  1,
-                          child: const Text('Change'),
-                        ),
-                      ],
-                    )
-                  else
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: Text(
-                            'No program selected',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: AlignaColors.subtext,
-                            ),
+                        RichText(
+                          textAlign: TextAlign.center,
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: _currentGreeting,
+                                style: GoogleFonts.playfairDisplay(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w600,
+                                  color: AlignaColors.primary,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        TextButton(
-                          onPressed: () =>
-                              ref
-                                      .read(app.shellTabIndexProvider.notifier)
-                                      .state =
-                                  1,
-                          child: const Text('Choose'),
+                        const SizedBox(height: 8),
+                        Text(
+                          _currentMotivation,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                            color: AlignaColors.subtext,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                // Section B: The Hero Progress Circle
+                Flexible(
+                  flex: 2,
+                  child: progressAsync.when(
+                    data: (progress) {
+                      final currentProgress = progress != null
+                          ? progress.day / progress.totalDays
+                          : 0.0;
+                      final progressPercent = (currentProgress * 100).round();
+                      final dayText = progress != null
+                          ? progress.isComplete
+                                ? 'Final day · ${progress.totalDays} of ${progress.totalDays}'
+                                : 'Day ${progress.day} of ${progress.totalDays}'
+                          : 'No progress';
 
-                  const SizedBox(height: 12),
-
-                  if (isProgramMode)
-                    _ProgramArea(
-                      activeProgramId: activeId,
-                      timeOfDay: _timeOfDay,
-                      appMood: appMood,
-                      catalogueAsync: catalogueAsync,
-                      mapMood: _mapMood,
-                      sessionBuilder: _buildProgramSession,
-                      catalogueProgramId: _catalogueProgramId,
-                      catalogueDurationDays: _catalogueDurationDays,
-                    )
-                  else
-                    _ChatArea(
-                      t: t,
-                      controller: _controller,
-                      replyState: replyState,
-                      onSend: (text) => ref
-                          .read(coachLlmProvider.notifier)
-                          .generateReply(text),
-                    ),
-
-                  const SizedBox(height: 12),
-
-                  // Micro-action system
-                  if (actionText != null &&
-                      actionStatus == MicroActionStatus.offered)
-                    _MicroActionCard(
-                      text: actionText,
-                      onStart: () {
-                        ref.read(microActionStatusProvider.notifier).state =
-                            MicroActionStatus.started;
-
-                        _expiryTimer?.cancel();
-                        _expired = false;
-
-                        _expiryTimer = Timer(const Duration(seconds: 60), () {
-                          if (!mounted) return;
-                          setState(() => _expired = true);
-                        });
-                      },
-                      onSkip: () {
-                        ref.read(microActionStatusProvider.notifier).state =
-                            MicroActionStatus.skipped;
-                      },
-                    ),
-
-                  if (actionStatus == MicroActionStatus.started && !_expired)
-                    _StartedActionBlock(onEnd: _endSessionUiOnly),
-
-                  if (_expired) _ExpiredActionBlock(onEnd: _endSessionUiOnly),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProgramArea extends ConsumerStatefulWidget {
-  const _ProgramArea({
-    required this.activeProgramId,
-    required this.timeOfDay,
-    required this.appMood,
-    required this.catalogueAsync,
-    required this.mapMood,
-    required this.sessionBuilder,
-    required this.catalogueProgramId,
-    required this.catalogueDurationDays,
-  });
-
-  final String activeProgramId;
-  final ProgramTimeOfDay timeOfDay;
-  final app.AlignaMood appMood;
-  final AsyncValue<List<dynamic>> catalogueAsync;
-
-  final String Function(app.AlignaMood) mapMood;
-
-  final Widget Function(
-    BuildContext context,
-    ProgramSessionBundle bundle,
-    ProgramSessionRequest req,
-  )
-  sessionBuilder;
-
-  final String? Function(dynamic item) catalogueProgramId;
-  final int? Function(dynamic item) catalogueDurationDays;
-
-  @override
-  ConsumerState<_ProgramArea> createState() => _ProgramAreaState();
-}
-
-class _ProgramAreaState extends ConsumerState<_ProgramArea> {
-  List<String>? _displayedLines;
-  String? _lastSessionKey;
-
-  Timer? _loadingWatchdog;
-  bool _showLoadRecovery = false;
-
-  bool _didProbe = false;
-
-  @override
-  void dispose() {
-    _loadingWatchdog?.cancel();
-    super.dispose();
-  }
-
-  void _armLoadingWatchdog() {
-    if (_loadingWatchdog != null) return; // do not re-arm on every rebuild
-    _showLoadRecovery = false;
-
-    _loadingWatchdog = Timer(const Duration(seconds: 8), () {
-      if (!mounted) return;
-      setState(() => _showLoadRecovery = true);
-    });
-  }
-
-  void _clearLoadingWatchdog() {
-    _loadingWatchdog?.cancel();
-    _loadingWatchdog = null;
-    _showLoadRecovery = false;
-  }
-
-  String _guessScriptAssetPath(String programId) {
-    return 'assets/data/program_scripts/$programId.v1.json';
-  }
-
-  Future<void> _probeProviderOnce(ProgramSessionRequest req) async {
-    if (_didProbe) return;
-    _didProbe = true;
-
-    unawaited(() async {
-      try {
-        debugPrint('[PROGRAM] probe start: $req');
-        await ref
-            .read(programSessionBundleProvider(req).future)
-            .timeout(const Duration(seconds: 6));
-        debugPrint('[PROGRAM] probe ok: $req');
-      } catch (e, st) {
-        debugPrint('[PROGRAM] probe FAILED: $e');
-        debugPrint('$st');
-        if (!mounted) return;
-      }
-    }());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final items = widget.catalogueAsync.valueOrNull ?? const [];
-
-    int durationDays = 7;
-    for (final p in items) {
-      final pid = widget.catalogueProgramId(p);
-      if (pid == widget.activeProgramId) {
-        final d = widget.catalogueDurationDays(p);
-        if (d != null && d > 0) durationDays = d;
-        break;
-      }
-    }
-
-    final req = ProgramSessionRequest(
-      programId: widget.activeProgramId,
-      durationDays: durationDays,
-      timeOfDay: widget.timeOfDay,
-      mood: widget.mapMood(widget.appMood),
-    );
-
-    final asyncBundle = ref.watch(programSessionBundleProvider(req));
-
-    return asyncBundle.when(
-      data: (bundle) {
-        _clearLoadingWatchdog();
-        _didProbe = false;
-        return _buildEnhancedSession(context, bundle, req);
-      },
-      loading: () {
-        _armLoadingWatchdog();
-        _probeProviderOnce(req);
-
-        if (_displayedLines != null && _displayedLines!.isNotEmpty) {
-          final fallbackSession = ProgramSession(
-            programId: req.programId,
-            day: 1,
-            timeOfDay: req.timeOfDay,
-            estimatedMinutes: 1,
-            intent: '',
-            messages: _displayedLines!,
-            microAction: null,
-            reflection: null,
-            resumeCopy: const ResumeCopy(
-              neutral: 'Welcome back.',
-              warm: 'Good to have you here.',
-            ),
-            llmPromptKey: null,
-          );
-
-          final fallbackBundle = ProgramSessionBundle(
-            progress: ProgramProgress(
-              programId: req.programId,
-              lastCompletedDay: 0,
-              startedAt: DateTime.now().toUtc(),
-            ),
-            plan: ProgramResumePlan(
-              dayToShow: 1,
-              showResumeLine: false,
-              resumeTone: 'neutral',
-              gapDays: 0,
-            ),
-            session: fallbackSession,
-          );
-
-          return widget.sessionBuilder(context, fallbackBundle, req);
-        }
-
-        return Padding(
-          padding: const EdgeInsets.only(top: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const TypingBubble(),
-              if (_showLoadRecovery) ...[
-                const SizedBox(height: 12),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text(
-                          'Your program content is loading.',
-                          style: TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'If this keeps happening, tap Retry. Then open Debug details.',
-                          style: TextStyle(color: AlignaColors.subtext),
-                        ),
-                        const SizedBox(height: 12),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _didProbe = false;
-                              _loadingWatchdog?.cancel();
-                              _loadingWatchdog = null;
-                              _showLoadRecovery = false;
-                            });
-                            ref.invalidate(programSessionBundleProvider(req));
-                          },
-                          child: const Text('Retry'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            final asset = _guessScriptAssetPath(req.programId);
-                            debugPrint('[PROGRAM] DEBUG DETAILS');
-                            debugPrint(' activeProgramId: ${req.programId}');
-                            debugPrint(' durationDays: ${req.durationDays}');
-                            debugPrint(' timeOfDay: ${req.timeOfDay}');
-                            debugPrint(' mood: ${req.mood}');
-                            debugPrint(' guessedAssetPath: $asset');
-
-                            showDialog(
-                              context: context,
-                              builder: (_) => AlertDialog(
-                                title: const Text('Debug details'),
-                                content: SelectableText(
-                                  'req:\n$req\n\n'
-                                  'guessed script asset:\n$asset\n\n'
-                                  'Next check:\n'
-                                  '1) Does this file exist in assets?\n'
-                                  '2) Is assets/data/program_scripts/ in pubspec assets?\n'
-                                  '3) Do you see [SCRIPT] loaded OK logs?\n',
+                      return Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Large circular progress bar
+                            SizedBox(
+                              width: 160,
+                              height: 160,
+                              child: TweenAnimationBuilder<double>(
+                                tween: Tween<double>(
+                                  begin: 0.0,
+                                  end: currentProgress,
                                 ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('Close'),
+                                duration: const Duration(seconds: 2),
+                                curve: Curves.easeInOut,
+                                builder: (context, value, child) {
+                                  return CircularProgressIndicator(
+                                    value: value,
+                                    strokeWidth: 8,
+                                    backgroundColor: AlignaColors.border,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      themeColorAsync.maybeWhen(
+                                        data: (color) =>
+                                            color ?? AlignaColors.accent,
+                                        orElse: () => AlignaColors.accent,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            // Big Text: "70%"
+                            programDetailsAsync.maybeWhen(
+                              data: (programDetails) {
+                                final secondaryColor =
+                                    programDetails != null &&
+                                        programDetails['secondary_color'] !=
+                                            null
+                                    ? Color(
+                                        int.parse(
+                                          programDetails['secondary_color']
+                                              .replaceFirst('#', '0xff'),
+                                        ),
+                                      )
+                                    : AlignaColors.primary;
+                                return Text(
+                                  '$progressPercent%',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .displayLarge
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: secondaryColor,
+                                      ),
+                                );
+                              },
+                              orElse: () => Text(
+                                '$progressPercent%',
+                                style: Theme.of(context).textTheme.displayLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AlignaColors.primary,
+                                    ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            // Sub-text: "Day 4 of 21"
+                            Text(
+                              dayText,
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(color: AlignaColors.subtext),
+                            ),
+                            const SizedBox(height: 16),
+                            // Streak counter and celebration
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AlignaColors.accent.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: AlignaColors.accent.withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.local_fire_department,
+                                    color: AlignaColors.accent,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '7 day streak! 🔥',
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: AlignaColors.accent,
+                                    ),
                                   ),
                                 ],
                               ),
-                            );
-                          },
-                          child: const Text('Debug details'),
+                            ),
+                            const SizedBox(height: 12),
+                            // Progress milestone celebration
+                            if (progressPercent >= 75) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AlignaColors.gold.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: AlignaColors.gold.withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.star,
+                                      color: AlignaColors.gold,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      progressPercent >= 90
+                                          ? 'Almost there! 🌟'
+                                          : 'Great progress! ⭐',
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                        color: AlignaColors.gold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
-                      ],
+                      );
+                    },
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (_, __) =>
+                        const Center(child: Text('Error loading progress')),
+                  ),
+                ),
+                // Section B.5: Reactive Aura (if program details loaded)
+                programDetailsAsync.maybeWhen(
+                  data: (programDetails) {
+                    if (programDetails != null &&
+                        programDetails['theme_color'] != null) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        child: ReactiveAuraWidget(
+                          lumiImageUrl: 'assets/coach/aligna_coach.png',
+                          programId: activeId,
+                          restIntensity: 0.3,
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                  orElse: () => const SizedBox.shrink(),
+                ),
+                // Section C: The Primary Action (The "Start" Card)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AlignaColors.primary.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '"Every step forward is a victory worth celebrating."',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: AlignaColors.subtext,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
                 ),
-              ],
-            ],
-          ),
-        );
-      },
-      error: (e, st) {
-        _clearLoadingWatchdog();
-        debugPrint('[PROGRAM] provider error: $e');
-        debugPrint('$st');
-
-        return Padding(
-          padding: const EdgeInsets.only(top: 16),
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Program load failed',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
                   ),
-                  const SizedBox(height: 8),
-                  SelectableText(e.toString()),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: () {
-                      ref.invalidate(programSessionBundleProvider(req));
+                  child: catalogueAsync.when(
+                    data: (catalogue) {
+                      print(
+                        '📊 [CoachHomeScreen] Catalogue loaded: ${catalogue?.length ?? 0} programs',
+                      );
+                      final matchingItems = catalogue
+                          ?.where(
+                            (item) => _catalogueProgramId(item) == activeId,
+                          )
+                          .toList();
+                      print(
+                        '📊 [CoachHomeScreen] Matching items for activeId $activeId: ${matchingItems?.length ?? 0}',
+                      );
+
+                      final activeItem = matchingItems?.isNotEmpty == true
+                          ? matchingItems!.first
+                          : null;
+                      print(
+                        '📊 [CoachHomeScreen] Active item: ${activeItem != null ? 'found' : 'null'}',
+                      );
+
+                      final dayTitle = progressAsync.maybeWhen(
+                        data: (progress) =>
+                            progress != null ? 'Day ${progress.day}' : 'Start',
+                        orElse: () => 'Start',
+                      );
+                      final programTitle = dailyContentAsync.maybeWhen(
+                        data: (dailyContent) =>
+                            dailyContent?.title ?? 'Daily Session',
+                        orElse: () => activeItem != null
+                            ? _extractTitle(activeItem)
+                            : 'Program',
+                      );
+
+                      // Check if today's task is completed
+                      final isTodayCompleted = progressAsync.maybeWhen(
+                        data: (progress) => rawProgressAsync.maybeWhen(
+                          data: (rawProgress) =>
+                              progress != null &&
+                              rawProgress != null &&
+                              progress.day <= rawProgress.lastCompletedDay,
+                          orElse: () => false,
+                        ),
+                        orElse: () => false,
+                      );
+
+                      return Card(
+                        elevation: 8,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0x33FFD700),
+                                Color(0x337678ED),
+                              ], // 20% opacity versions
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              // Pulsing button with Hero transition
+                              AnimatedBuilder(
+                                animation: _pulseAnimation,
+                                builder: (context, child) {
+                                  return Transform.scale(
+                                    scale: _pulseAnimation.value,
+                                    child: Hero(
+                                      tag: 'start_button',
+                                      child: SizedBox(
+                                        width: double.infinity,
+                                        child: ElevatedButton(
+                                          onPressed: () async {
+                                            // Haptic feedback: double-pulse heartbeat
+                                            await HapticFeedback.mediumImpact();
+                                            await Future.delayed(
+                                              const Duration(milliseconds: 100),
+                                            );
+                                            await HapticFeedback.lightImpact();
+
+                                            // Navigate to video player screen with Hero transition
+                                            final activeProgramId = ref.read(
+                                              app.activeProgramIdProvider,
+                                            );
+                                            final programDetails =
+                                                programDetailsAsync.maybeWhen(
+                                                  data: (data) => data,
+                                                  orElse: () => null,
+                                                );
+                                            final programType =
+                                                programDetails != null
+                                                ? ProgramType.fromString(
+                                                    programDetails['track'] ??
+                                                        'support',
+                                                  )
+                                                : ProgramType.support;
+
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    VideoPlayerScreen(
+                                                      programId:
+                                                          activeProgramId,
+                                                      programType: programType,
+                                                    ),
+                                              ),
+                                            );
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: themeColorAsync
+                                                .maybeWhen(
+                                                  data: (color) =>
+                                                      color ??
+                                                      AlignaColors.primary,
+                                                  orElse: () =>
+                                                      AlignaColors.primary,
+                                                ),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 32,
+                                              vertical: 16,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              if (isTodayCompleted) ...[
+                                                const Icon(
+                                                  Icons.check_circle,
+                                                  color: AlignaColors.gold,
+                                                ),
+                                                const SizedBox(width: 8),
+                                              ],
+                                              Expanded(
+                                                child: Text(
+                                                  isTodayCompleted
+                                                      ? 'Rewatch Session'
+                                                      : 'Enter $dayTitle: $programTitle',
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .titleMedium
+                                                      ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  maxLines: 1,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
                     },
-                    child: const Text('Retry'),
-                  ),
-                  TextButton(
-                    onPressed: () async {
-                      await Prefs.setActiveProgramId('');
-                      ref.read(app.activeProgramIdProvider.notifier).state =
-                          null;
+                    loading: () {
+                      print('⏳ [CoachHomeScreen] Catalogue loading...');
+                      return const Center(child: CircularProgressIndicator());
                     },
-                    child: const Text('Clear program'),
+                    error: (error, stack) {
+                      print('❌ [CoachHomeScreen] Catalogue error: $error');
+                      print('❌ [CoachHomeScreen] Stack: $stack');
+                      return Center(
+                        child: Text('Error loading catalogue: $error'),
+                      );
+                    },
                   ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildEnhancedSession(
-    BuildContext context,
-    ProgramSessionBundle bundle,
-    ProgramSessionRequest req,
-  ) {
-    final session = bundle.session;
-    final fallbackLines = session.messages;
-
-    final sessionKey =
-        '${session.programId}_${session.day}_${session.timeOfDay}';
-
-    if (_lastSessionKey != sessionKey) {
-      _lastSessionKey = sessionKey;
-      _displayedLines = null;
-    }
-
-    if (_displayedLines == null) {
-      _displayedLines = fallbackLines;
-
-      // Attempt enhancement only if llmPromptKey exists.
-      if (session.llmPromptKey != null) {
-        _enhanceLines(session, req);
-      }
-    }
-
-    final enhancedSession = ProgramSession(
-      programId: session.programId,
-      day: session.day,
-      timeOfDay: session.timeOfDay,
-      estimatedMinutes: session.estimatedMinutes,
-      intent: session.intent,
-      messages: _displayedLines!,
-      microAction: session.microAction,
-      reflection: session.reflection,
-      resumeCopy: session.resumeCopy,
-      llmPromptKey: session.llmPromptKey,
-    );
-
-    final enhancedBundle = ProgramSessionBundle(
-      progress: bundle.progress,
-      plan: bundle.plan,
-      session: enhancedSession,
-    );
-
-    return widget.sessionBuilder(context, enhancedBundle, req);
-  }
-
-  void _enhanceLines(ProgramSession session, ProgramSessionRequest req) {
-    unawaited(() async {
-      try {
-        final svc = ref.read(coachEnhanceServiceProvider);
-
-        final res = await svc
-            .enhance(
-              request: CoachEnhanceRequest(
-                programId: widget.activeProgramId,
-                day: session.day,
-                blockId: req.timeOfDay.jsonKey,
-                moodKey: req.mood,
-                language: 'en',
-                fallbackLines: session.messages,
-                maxLines: session.messages.length,
-              ),
-            )
-            .timeout(const Duration(seconds: 8));
-
-        if (!mounted) return;
-
-        setState(() {
-          _displayedLines = res.lines.isNotEmpty ? res.lines : session.messages;
-        });
-      } catch (e) {
-        debugPrint('[ENHANCE] failed (non-fatal): $e');
-      }
-    }());
-  }
-}
-
-class _ChatArea extends StatelessWidget {
-  const _ChatArea({
-    required this.t,
-    required this.controller,
-    required this.replyState,
-    required this.onSend,
-  });
-
-  final dynamic t;
-  final TextEditingController controller;
-  final AsyncValue replyState;
-  final void Function(String text) onSend;
-
-  @override
-  Widget build(BuildContext context) {
-    final hasReply = replyState.maybeWhen(
-      data: (r) => r != null,
-      orElse: () => false,
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const CoachBubble(text: "What would you like to focus on today?"),
-        const SizedBox(height: 12),
-        if (!hasReply)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    "Your intention",
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AlignaColors.subtext,
-                      fontWeight: FontWeight.w600,
-                    ),
+                ),
+                // Section D: Floating Action Buttons (The Tools)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
                   ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: controller,
-                    decoration: InputDecoration(
-                      hintText: "Keep it simple. One sentence is enough.",
-                      hintStyle: const TextStyle(color: AlignaColors.subtext),
-                      filled: true,
-                      fillColor: const Color(0xFF0F1530),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(
-                          color: AlignaColors.border,
+                  child: Column(
+                    children: [
+                      Text(
+                        'Your transformation toolkit',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AlignaColors.subtext,
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          // Journal (Pen icon) - with emotional tooltip
+                          FloatingActionButton(
+                            heroTag: 'journal',
+                            onPressed: () async {
+                              await AppHaptics.light();
+                              // TODO: Open blank reflection page
+                            },
+                            backgroundColor: AlignaColors.accent.withOpacity(
+                              0.9,
+                            ),
+                            child: const Icon(
+                              Icons.edit_note,
+                              color: Colors.white,
+                            ),
+                            tooltip: 'Reflect on your journey',
+                          ),
+                          // Frequency (Soundwave icon) - with emotional tooltip
+                          FloatingActionButton(
+                            heroTag: 'frequency',
+                            onPressed: () async {
+                              await AppHaptics.light();
+                              // TODO: Open mini-player for 528Hz/432Hz audio
+                            },
+                            backgroundColor: AlignaColors.primary.withOpacity(
+                              0.9,
+                            ),
+                            child: const Icon(Icons.waves, color: Colors.white),
+                            tooltip: 'Tune into healing frequencies',
+                          ),
+                          // Vision (Image icon) - with emotional tooltip
+                          FloatingActionButton(
+                            heroTag: 'vision',
+                            onPressed: () async {
+                              await AppHaptics.light();
+                              // TODO: Open user's Vision Board
+                            },
+                            backgroundColor: AlignaColors.gold.withOpacity(0.9),
+                            child: const Icon(
+                              Icons.visibility,
+                              color: Colors.white,
+                            ),
+                            tooltip: 'Visualize your dreams',
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: () {
-                      final text = controller.text.trim();
-                      if (text.isEmpty) return;
-                      AppHaptics.light();
-                      onSend(text);
-                    },
-                    child: const Text("Continue"),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(
+                  height: 24,
+                ), // Extra bottom padding for scroll safety
+              ],
             ),
           ),
-      ],
-    );
-  }
-}
-
-class _MicroActionCard extends StatelessWidget {
-  const _MicroActionCard({
-    required this.text,
-    required this.onStart,
-    required this.onSkip,
-  });
-
-  final String text;
-  final VoidCallback onStart;
-  final VoidCallback onSkip;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              "One aligned step",
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            Text(text),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: onStart,
-              child: const Text("Let’s do it"),
-            ),
-            TextButton(onPressed: onSkip, child: const Text("Not today")),
-          ],
         ),
       ),
-    );
-  }
-}
-
-class _StartedActionBlock extends StatelessWidget {
-  const _StartedActionBlock({required this.onEnd});
-  final VoidCallback onEnd;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const SizedBox(height: 16),
-        const Divider(),
-        const SizedBox(height: 12),
-        const Text(
-          "Good. Just do the first 60 seconds. That counts.",
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          "You can stop anytime.",
-          style: TextStyle(color: AlignaColors.subtext),
-        ),
-        const SizedBox(height: 12),
-        const CalmCue(visible: true, size: 120, isVeryTired: false),
-        const SizedBox(height: 12),
-        ElevatedButton(onPressed: onEnd, child: const Text("End session")),
-      ],
-    );
-  }
-}
-
-class _ExpiredActionBlock extends StatelessWidget {
-  const _ExpiredActionBlock({required this.onEnd});
-  final VoidCallback onEnd;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const SizedBox(height: 20),
-        const Divider(),
-        const SizedBox(height: 12),
-        const CoachBubble(text: "That’s enough for today."),
-        const SizedBox(height: 12),
-        ElevatedButton(onPressed: onEnd, child: const Text("End session")),
-      ],
     );
   }
 }

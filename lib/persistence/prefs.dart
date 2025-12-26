@@ -27,6 +27,8 @@ class Prefs {
   static const _kActiveProgramId = 'aligna_active_program_id';
   static const _kProgramTimeOfDay =
       'aligna_program_time_of_day'; // morning|evening
+  static const _kTimePreference = 'aligna_time_preference'; // 5|15
+  static const _kWelcomeShown = 'aligna_welcome_shown'; // true|false
 
   // ─────────────────────────────────────────────
   // Program progress keys
@@ -99,28 +101,23 @@ class Prefs {
   // Language
   // ─────────────────────────────────────────────
 
-  static Future<void> saveLang(AlignaLanguage lang) async {
+  static Future<void> saveLang(String lang) async {
     final p = await _sp();
-    await p.setString(_kLang, lang.name);
+    await p.setString(_kLang, lang);
   }
 
-  static Future<AlignaLanguage?> loadLang() async {
+  static Future<String?> loadLang() async {
     final p = await _sp();
-    final s = p.getString(_kLang);
-    if (s == null) return null;
-    for (final v in AlignaLanguage.values) {
-      if (v.name == s) return v;
-    }
-    return null;
+    return p.getString(_kLang);
   }
 
   /// Optional helper if you want “default English” behaviour:
   /// Call this once during bootstrap if you no longer want LanguageSelect as mandatory.
-  static Future<AlignaLanguage> ensureLangOrDefaultEnglish() async {
+  static Future<String> ensureLangOrDefaultEnglish() async {
     final existing = await loadLang();
     if (existing != null) return existing;
-    await saveLang(AlignaLanguage.en);
-    return AlignaLanguage.en;
+    await saveLang('en');
+    return 'en';
   }
 
   // ─────────────────────────────────────────────
@@ -313,9 +310,29 @@ class Prefs {
     return 'morning';
   }
 
-  static Future<void> clearProgramTimeOfDay() async {
+  static Future<void> saveTimePreference(int minutes) async {
     final p = await _sp();
-    await p.remove(_kProgramTimeOfDay);
+    await p.setInt(_kTimePreference, minutes);
+  }
+
+  static Future<int> getTimePreference() async {
+    final p = await _sp();
+    return p.getInt(_kTimePreference) ?? 5; // Default to 5 minutes
+  }
+
+  static Future<void> saveWelcomeShown(bool shown) async {
+    final p = await _sp();
+    await p.setBool(_kWelcomeShown, shown);
+  }
+
+  static Future<bool> getWelcomeShown() async {
+    final p = await _sp();
+    return p.getBool(_kWelcomeShown) ?? false;
+  }
+
+  static Future<void> saveActiveProgramId(String programId) async {
+    final p = await _sp();
+    await p.setString(_kActiveProgramId, programId.trim());
   }
 
   // ─────────────────────────────────────────────
