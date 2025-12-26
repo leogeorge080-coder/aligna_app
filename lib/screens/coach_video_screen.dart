@@ -36,8 +36,8 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen>
   bool _isPlaying = false;
   bool _showJournalMode = false;
   bool _hasStartedPlaying = false;
-  bool _isLoading = false;
-  bool _showTextCoachBackup = false;
+  final bool _isLoading = false;
+  final bool _showTextCoachBackup = false;
   Timer? _audioLoadTimer;
   final TextEditingController _journalController = TextEditingController();
   late AnimationController _transitionController;

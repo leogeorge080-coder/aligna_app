@@ -181,7 +181,7 @@ class _ReactiveAuraWidgetState extends ConsumerState<ReactiveAuraWidget>
   late AnimationController _nebulaController;
   late AnimationController _rippleController;
   List<StarParticle> _starParticles = [];
-  List<RippleEffect> _activeRipples = [];
+  final List<RippleEffect> _activeRipples = [];
   Offset _gyroscopeOffset = Offset.zero;
   StreamSubscription<GyroscopeEvent>? _gyroscopeSubscription;
 

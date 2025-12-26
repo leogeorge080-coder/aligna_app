@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../providers/app_providers.dart';
 import '../utils/haptics.dart';
-import 'onboarding_quiz_screen.dart';
+import 'frequency_selection_screen.dart';
 
 class NameEntryScreen extends ConsumerStatefulWidget {
   const NameEntryScreen({super.key});
@@ -326,10 +326,10 @@ class _NameEntryScreenState extends ConsumerState<NameEntryScreen>
       // Update the global name provider
       ref.read(userNameProvider.notifier).state = name;
 
-      // Navigate to energy quiz
+      // Navigate to frequency selection
       if (mounted) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const OnboardingQuizScreen()),
+          MaterialPageRoute(builder: (_) => const FrequencySelectionScreen()),
         );
       }
     } catch (e) {
@@ -341,7 +341,7 @@ class _NameEntryScreenState extends ConsumerState<NameEntryScreen>
 
       if (mounted) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const OnboardingQuizScreen()),
+          MaterialPageRoute(builder: (_) => const FrequencySelectionScreen()),
         );
       }
     } finally {

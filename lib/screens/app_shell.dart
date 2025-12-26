@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../providers/app_providers.dart';
 import '../theme/aligna_theme.dart';
 import 'coach_home_screen.dart';
+import 'guidance_screen.dart';
 import 'programs_screen.dart';
 import 'settings_screen.dart';
 
@@ -19,15 +20,20 @@ class AppShell extends ConsumerWidget {
     return Scaffold(
       body: IndexedStack(
         index: index,
-        children: const [CoachHomeScreen(), ProgramsScreen(), SettingsScreen()],
+        children: const [
+          CoachHomeScreen(),
+          GuidanceScreen(),
+          ProgramsScreen(),
+          SettingsScreen(),
+        ],
       ),
       bottomNavigationBar: Theme(
         data: Theme.of(context).copyWith(
           navigationBarTheme: NavigationBarThemeData(
-            labelTextStyle: MaterialStateProperty.resolveWith<TextStyle>((
-              Set<MaterialState> states,
+            labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((
+              Set<WidgetState> states,
             ) {
-              if (states.contains(MaterialState.selected)) {
+              if (states.contains(WidgetState.selected)) {
                 return GoogleFonts.montserrat(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -48,6 +54,10 @@ class AppShell extends ConsumerWidget {
               ref.read(shellTabIndexProvider.notifier).state = i,
           destinations: const [
             NavigationDestination(icon: Icon(Icons.home), label: 'Coach'),
+            NavigationDestination(
+              icon: Icon(Icons.auto_awesome),
+              label: 'Guidance',
+            ),
             NavigationDestination(icon: Icon(Icons.list), label: 'Programs'),
             NavigationDestination(
               icon: Icon(Icons.settings),

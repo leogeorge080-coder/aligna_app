@@ -6,6 +6,25 @@ import '../models/daily_content.dart';
 class DailyContentService {
   static final supabase = Supabase.instance.client;
 
+  static Future<String?> _signedAudioUrl(String? raw) async {
+    if (raw == null || raw.trim().isEmpty) return null;
+    final value = raw.trim();
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      return value;
+    }
+    try {
+      return await supabase.storage
+          .from('audio_sessions')
+          .createSignedUrl(value, 600);
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[DailyContentService] Failed to sign audio URL: $e');
+        debugPrintStack(stackTrace: st);
+      }
+      return null;
+    }
+  }
+
   /// Fetches daily content for a specific program, day and language
   static Future<DailyContent?> fetchDayContent({
     required String programId,
@@ -36,6 +55,11 @@ class DailyContentService {
         debugPrint('  title: ${response['title']}');
       }
 
+      final signed = await _signedAudioUrl(response['audio_url'] as String?);
+      if (signed != null) {
+        response['audio_url'] = signed;
+      }
+
       return DailyContent.fromJson(response);
     } catch (e, st) {
       if (kDebugMode) {
@@ -62,9 +86,16 @@ class DailyContentService {
           .eq('language_code', languageCode)
           .order('day_number');
 
-      return (response as List)
-          .map((json) => DailyContent.fromJson(json))
-          .toList();
+      final items = <DailyContent>[];
+      for (final raw in (response as List)) {
+        final json = Map<String, dynamic>.from(raw as Map);
+        final signed = await _signedAudioUrl(json['audio_url'] as String?);
+        if (signed != null) {
+          json['audio_url'] = signed;
+        }
+        items.add(DailyContent.fromJson(json));
+      }
+      return items;
     } catch (e, st) {
       if (kDebugMode) {
         debugPrint(
@@ -94,9 +125,16 @@ class DailyContentService {
           .lte('day_number', endDay)
           .order('day_number');
 
-      return (response as List)
-          .map((json) => DailyContent.fromJson(json))
-          .toList();
+      final items = <DailyContent>[];
+      for (final raw in (response as List)) {
+        final json = Map<String, dynamic>.from(raw as Map);
+        final signed = await _signedAudioUrl(json['audio_url'] as String?);
+        if (signed != null) {
+          json['audio_url'] = signed;
+        }
+        items.add(DailyContent.fromJson(json));
+      }
+      return items;
     } catch (e, st) {
       if (kDebugMode) {
         debugPrint(

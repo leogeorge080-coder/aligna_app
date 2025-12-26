@@ -1,4 +1,4 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+﻿import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/program.dart';
 
 class ProgramService {
@@ -6,6 +6,12 @@ class ProgramService {
 
   /// Fetches the UUID from the programs table where slug matches the given slug
   static Future<String?> getProgramIdBySlug(String slug) async {
+    final isUuid = RegExp(
+      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+    ).hasMatch(slug);
+    if (isUuid) {
+      return slug;
+    }
     try {
       final response = await supabase
           .from('programs')
@@ -70,28 +76,22 @@ class ProgramService {
 
   /// Fetches all active programs
   static Future<List<Program>> getAllPrograms() async {
+    print('\u{1F7E1} [ProgramService] getAllPrograms() called');
     try {
-      print('🔍 [ProgramService] Fetching all programs...');
+      print('\u{1F7E1} [ProgramService] Calling Supabase now...');
       final response = await supabase
           .from('programs')
-          .select('*')
-          .eq('is_active', true)
+          .select()
           .order('title');
 
-      print('🔍 [ProgramService] Raw response: $response');
-      final programs = (response as List)
-          .map((json) => Program.fromJson(json))
-          .toList();
-      print('🔍 [ProgramService] Parsed ${programs.length} programs');
-      for (final p in programs) {
-        print(
-          '🔍 [ProgramService] Program: ${p.title} (${p.id}) - track: ${p.track}',
-        );
-      }
-      return programs;
-    } catch (e) {
-      print('❌ [ProgramService] Error fetching all programs: $e');
-      return [];
+      print('\u{1F7E2} [ProgramService] Supabase response received');
+      print('\u{1F7E2} [ProgramService] Raw response: $response');
+
+      return response.map<Program>((e) => Program.fromJson(e)).toList();
+    } catch (e, stack) {
+      print('\u{1F534} [ProgramService] ERROR: $e');
+      print('\u{1F534} StackTrace: $stack');
+      rethrow;
     }
   }
 }

@@ -12,9 +12,9 @@ void main() async {
 
   try {
     await Supabase.initialize(
-      url: 'http://localhost:54321', // Local Supabase URL for development
+      url: 'https://tfyzjqrgwjiturirjrpt.supabase.co', // Live Supabase URL
       anonKey:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0', // Default local anon key
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmeXpqcXJnd2ppdHVyaXJqcnB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzODU4NTQsImV4cCI6MjA4MTk2MTg1NH0.2GQt7Nu2XnhLNHaAm8BZ16-GM37vVzBay1ROxrs8inY', // Live Supabase anon key
     );
   } catch (e) {
     // Supabase initialization failed, continue without it for UI testing
@@ -50,3 +50,5 @@ class AlignaApp extends ConsumerWidget {
     );
   }
 }
+
+

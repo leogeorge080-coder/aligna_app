@@ -89,15 +89,26 @@ class _ProgramsScreenState extends ConsumerState<ProgramsScreen> {
             ('purpose', 'Purpose'),
           ];
 
+          String normalizeTrack(String value) {
+            return value
+                .toLowerCase()
+                .trim()
+                .replaceAll(' ', '_')
+                .replaceAll('-', '_');
+          }
+
           bool matchesTab(Program p) {
-            final t = p.track;
+            final t = normalizeTrack(p.track);
+            final tab = normalizeTrack(_tab);
 
             switch (_tab) {
               case 'confidence':
                 // Support both "confidence" and legacy "identity"
                 return t == 'confidence' || t == 'identity';
+              case 'money':
+                return t == tab || t == 'abundance' || t == 'wealth';
               default:
-                return t == _tab;
+                return t == tab;
             }
           }
 
@@ -196,7 +207,7 @@ class _ActiveProgramCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = active?.title ?? activeId;
+    final title = active?.title ?? 'Money';
     final sub = active == null
         ? 'Resume your active program.'
         : '${active!.durationDays} days • ${active!.description}';

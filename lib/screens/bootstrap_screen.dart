@@ -5,7 +5,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../providers/app_providers.dart';
 import '../persistence/prefs.dart';
+import '../services/program_service.dart';
 import '../theme/aligna_theme.dart';
+import '../models/program.dart';
 
 import 'language_sanctuary_screen.dart';
 import 'name_entry_screen.dart';
@@ -65,12 +67,57 @@ class _AlignaBootstrapScreenState extends ConsumerState<AlignaBootstrapScreen> {
     ref.read(moodProvider.notifier).state = mood;
 
     // 4) Active program
-    final activeProgramId = await Prefs.loadActiveProgramId();
-    ref
-        .read(activeProgramIdProvider.notifier)
-        .state = (activeProgramId == null || activeProgramId.trim().isEmpty)
+    String? activeProgramId = await Prefs.loadActiveProgramId();
+    activeProgramId = (activeProgramId == null || activeProgramId.trim().isEmpty)
         ? null
-        : activeProgramId;
+        : activeProgramId.trim();
+
+    // Ensure we only keep a valid UUID from Supabase, not legacy slugs
+    List<Program> programs = const [];
+    try {
+      programs = await ProgramService.getAllPrograms();
+    } catch (_) {
+      // If fetch fails, keep whatever is saved and avoid wiping prefs.
+    }
+
+    if (programs.isNotEmpty) {
+      Program pickAbundance(List<Program> list) {
+        for (final p in list) {
+          if (p.track == 'money') return p;
+        }
+        for (final p in list) {
+          if (p.slug.contains('money')) return p;
+        }
+        for (final p in list) {
+          final title = p.title.toLowerCase();
+          if (title.contains('money') || title.contains('abundance')) {
+            return p;
+          }
+        }
+        return list.first;
+      }
+
+      final preferred = pickAbundance(programs);
+      final programIds = programs.map((p) => p.id).toSet();
+      if (activeProgramId != null && !programIds.contains(activeProgramId)) {
+        final resolved = await ProgramService.getProgramIdBySlug(activeProgramId);
+        if (resolved != null && programIds.contains(resolved)) {
+          final nextId = resolved;
+          activeProgramId = nextId;
+          await Prefs.saveActiveProgramId(nextId);
+        } else {
+          final nextId = preferred.id;
+          activeProgramId = nextId;
+          await Prefs.saveActiveProgramId(nextId);
+        }
+      } else if (activeProgramId == null) {
+        final nextId = preferred.id;
+        activeProgramId = nextId;
+        await Prefs.saveActiveProgramId(nextId);
+      }
+    }
+
+    ref.read(activeProgramIdProvider.notifier).state = activeProgramId;
 
     // 5) Onboarding completion
     final onboardingCompleted =
@@ -102,3 +149,4 @@ class _AlignaBootstrapScreenState extends ConsumerState<AlignaBootstrapScreen> {
     return const AppShell();
   }
 }
+

@@ -30,12 +30,6 @@ dependencies:
   # Vibration for haptic feedback
   vibration: ^2.0.0
 
-  # Video player for coach videos
-  video_player: ^2.8.6
-
-  # Image handling
-  image_picker: ^1.1.2
-
   # Fonts
   google_fonts: ^6.2.1
 
@@ -55,7 +49,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/videos/
     - assets/coach/
     - assets/icon/
 flutter_icons:

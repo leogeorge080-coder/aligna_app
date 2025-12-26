@@ -204,20 +204,26 @@ class _OnboardingQuizScreenState extends ConsumerState<OnboardingQuizScreen>
     // Fetch the UUID from the programs table
     final programId = await ProgramService.getProgramIdBySlug(programSlug);
 
-    if (programId == null) {
-      // Fallback: save the slug if we can't fetch the UUID
-      debugPrint(
-        'Warning: Could not fetch UUID for program slug $programSlug, using slug as fallback',
-      );
-      await Prefs.saveActiveProgramId(programSlug);
-      ref.read(app.activeProgramIdProvider.notifier).state = programSlug;
-    } else {
-      // Save the UUID to preferences
-      await Prefs.saveActiveProgramId(programId);
-      ref.read(app.activeProgramIdProvider.notifier).state = programId;
+    String? resolvedProgramId = programId;
+    if (resolvedProgramId == null) {
+      final programs = await ProgramService.getAllPrograms();
+      if (programs.isNotEmpty) {
+        resolvedProgramId = programs.first.id;
+      }
     }
 
-    // Update providers
+    if (resolvedProgramId == null) {
+      debugPrint(
+        'Warning: Could not resolve program UUID for slug $programSlug, leaving active program unset',
+      );
+      await Prefs.clearActiveProgramId();
+      ref.read(app.activeProgramIdProvider.notifier).state = null;
+    } else {
+      final nextId = resolvedProgramId;
+      await Prefs.saveActiveProgramId(nextId);
+      ref.read(app.activeProgramIdProvider.notifier).state = nextId;
+    }
+        // Update providers
     ref.read(app.onboardingCompletedProvider.notifier).state = true;
 
     // Save time preference
@@ -506,3 +512,5 @@ class CircularRevealClipper extends CustomClipper<Path> {
     return oldClipper.fraction != fraction;
   }
 }
+
+

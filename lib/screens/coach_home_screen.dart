@@ -4,17 +4,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../providers/program_providers.dart';
-import '../models/program_session.dart';
-import '../providers/program_session_bundle_provider.dart';
-import '../providers/program_progress_actions_provider.dart';
 import '../providers/program_catalogue_provider.dart';
 import '../providers/program_progress_provider.dart';
 import '../providers/program_progress_store_provider.dart';
 import '../providers/resume_copy_provider.dart';
+import '../providers/user_preferences_provider.dart';
+import '../models/program.dart';
 import '../models/program_progress.dart';
-import '../models/program_resume_plan.dart';
 
 // ─────────────────────────────────────────────
 // App-level state & providers
@@ -44,7 +43,6 @@ import '../services/journal_service.dart';
 import '../widgets/calm_cue.dart';
 import '../widgets/program_picker_sheet.dart';
 import '../widgets/animated_gradient_background.dart';
-import '../widgets/coach_widgets.dart';
 import '../widgets/staggered_coach_bubbles.dart';
 import 'welcome_celebration_screen.dart';
 import '../models/program_type.dart';
@@ -66,12 +64,10 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
 
   Timer? _expiryTimer;
   bool _expired = false;
+  final Set<String> _ensuredRemoteProgress = <String>{};
 
   // Reflection controllers (key: 'programId_day')
   final Map<String, TextEditingController> _reflectionControllers = {};
-
-  // Simple UI toggle (fully open mode: both available)
-  final ProgramTimeOfDay _timeOfDay = ProgramTimeOfDay.morning;
 
   // Dynamic greeting state
   String _currentGreeting = '';
@@ -139,6 +135,7 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
 
     // Pre-cache audio for active program
     _preCacheAudio();
+
   }
 
   void _generateDynamicGreeting() {
@@ -189,6 +186,87 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
         // User will still get proper error handling when they actually try to play
       }
     }
+  }
+
+  Future<void> _ensureRemoteProgress(String programId) async {
+    if (_ensuredRemoteProgress.contains(programId)) return;
+    _ensuredRemoteProgress.add(programId);
+
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+
+    try {
+      final response = await Supabase.instance.client
+          .from('user_progress')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('program_id', programId)
+          .limit(1);
+
+      if (response.isNotEmpty) return;
+
+      await Supabase.instance.client.from('user_progress').insert([
+        {
+          'user_id': user.id,
+          'program_id': programId,
+          'day_number': 1,
+          'journal_entry_text': '',
+        },
+      ]);
+    } catch (e, st) {
+      debugPrint('[CoachHomeScreen] Failed to ensure progress: $e');
+      debugPrintStack(stackTrace: st);
+    }
+  }
+
+  Widget _buildEmptyState(
+    BuildContext context, {
+    required String title,
+    required String body,
+    String buttonLabel = 'Select Journey',
+  }) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.auto_awesome, size: 48),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: GoogleFonts.montserrat(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AlignaColors.text,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              body,
+              style: GoogleFonts.montserrat(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: AlignaColors.subtext,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                ref.read(app.shellTabIndexProvider.notifier).state = 2;
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AlignaColors.primary,
+                foregroundColor: Colors.white,
+              ),
+              child: Text(buttonLabel),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _checkAndShowWelcome() async {
@@ -363,23 +441,6 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
     );
   }
 
-  Widget _buildProgramSession(
-    BuildContext context,
-    ProgramSessionBundle bundle,
-    ProgramSessionRequest req,
-  ) {
-    final s = bundle.session;
-
-    final resumeLine =
-        bundle.plan.showResumeLine && req.timeOfDay == ProgramTimeOfDay.morning
-        ? (bundle.plan.resumeTone == 'warm'
-              ? s.resumeCopy.warm
-              : s.resumeCopy.neutral)
-        : null;
-
-    return const Text('Program Session Placeholder');
-  }
-
   // Robust extractors for both Map-based and typed catalogue models
   String? _catalogueProgramId(dynamic item) {
     if (item == null) return null;
@@ -424,9 +485,58 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
     }
   }
 
+  String _normalizeTrack(String value) {
+    return value
+        .toLowerCase()
+        .trim()
+        .replaceAll(' ', '_')
+        .replaceAll('-', '_');
+  }
+
+  Program? _pickProgramForGoals(
+    List<Program> programs,
+    List<String> goals,
+  ) {
+    if (goals.isEmpty) return null;
+    final normalizedGoals = goals
+        .map(_normalizeTrack)
+        .where((g) => g.isNotEmpty)
+        .toList();
+    if (normalizedGoals.isEmpty) return null;
+
+    final days = DateTime.now().difference(DateTime(2020, 1, 1)).inDays;
+    final target = normalizedGoals[days % normalizedGoals.length];
+
+    bool matchesGoal(Program p) {
+      final t = _normalizeTrack(p.track);
+      if (target == 'abundance') {
+        return t == 'money' || t == 'wealth' || t == 'abundance';
+      }
+      if (target == 'inner_peace') {
+        return t == 'health' || t == 'support';
+      }
+      if (target == 'health') {
+        return t == 'health' || t == 'support';
+      }
+      return t == target;
+    }
+
+    for (final p in programs) {
+      if (matchesGoal(p)) return p;
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = L10n.of(ref);
+
+    ref.listen<String?>(app.activeProgramIdProvider, (prev, next) {
+      final trimmed = (next == null || next.trim().isEmpty) ? null : next.trim();
+      if (trimmed != null) {
+        _ensureRemoteProgress(trimmed);
+      }
+    });
 
     final appMood = ref.watch(app.moodProvider);
     final heartMood = ref.watch(app.heartMoodProvider);
@@ -446,49 +556,49 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
         ? null
         : rawActiveId;
 
-    final progressAsync = activeId == null
-        ? const AsyncValue.data(null)
-        : ref.watch(programProgressProvider);
+    if (activeId != null) {
+      _ensureRemoteProgress(activeId);
+    }
+
+    if (activeId == null) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: AnimatedGradientBackground(
+          child: SafeArea(
+            child: _buildEmptyState(
+              context,
+              title: 'Choose your first program',
+              body:
+                  'We could not find an active program yet. Pick one to begin your first session.',
+            ),
+          ),
+        ),
+      );
+    }
+
+    final progressAsync = ref.watch(programProgressProvider);
 
     // Get raw progress data for completion check
-    final rawProgressAsync = activeId == null
-        ? const AsyncValue.data(null)
-        : ref.watch(
+    final rawProgressAsync = ref.watch(
             FutureProvider<ProgramProgress?>((ref) async {
               final store = ref.read(programProgressStoreProvider);
-              return await store.read(activeId!);
+              return await store.read(activeId);
             }),
           );
 
-    final resumeAsync = activeId == null
-        ? const AsyncValue.data(
-            ResumeCopyResult(text: null, shouldMarkShown: false),
-          )
-        : ref.watch(resumeCopyProvider);
+    final resumeAsync = ref.watch(resumeCopyProvider);
 
-    // Fetch daily content for day 1 using onboarding data
-    final dailyContentAsync = activeId == null
-        ? const AsyncValue.data(null)
-        : ref.watch(
-            dailyContentForProgramDayProvider((
-              programId: activeId,
-              dayNumber: 1,
-            )),
-          );
+    final selectedGoalsAsync = ref.watch(selectedFrequenciesProvider);
 
     // Fetch program details for theme color
-    final programDetailsAsync = activeId == null
-        ? const AsyncValue.data(null)
-        : ref.watch(
+    final programDetailsAsync = ref.watch(
             FutureProvider<Map<String, dynamic>?>((ref) async {
               return await ProgramService.getProgramById(activeId);
             }),
           );
 
     // Get theme color for dynamic button styling
-    final themeColorAsync = activeId == null
-        ? const AsyncValue.data(null)
-        : ref.watch(programThemeColorProvider(activeId));
+    final themeColorAsync = ref.watch(programThemeColorProvider(activeId));
 
     // Initialize from onboarding data instead of mood
     return Scaffold(
@@ -562,9 +672,7 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                 ),
                 const SizedBox(height: 32),
                 // Section B: The Hero Progress Circle
-                Flexible(
-                  flex: 2,
-                  child: progressAsync.when(
+                progressAsync.when(
                     data: (progress) {
                       final currentProgress = progress != null
                           ? progress.day / progress.totalDays
@@ -733,7 +841,6 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                     error: (_, __) =>
                         const Center(child: Text('Error loading progress')),
                   ),
-                ),
                 // Section B.5: Reactive Aura (if program details loaded)
                 programDetailsAsync.maybeWhen(
                   data: (programDetails) {
@@ -786,37 +893,81 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                   ),
                   child: catalogueAsync.when(
                     data: (catalogue) {
+                      if (catalogue.isEmpty) {
+                        return _buildEmptyState(
+                          context,
+                          title: 'No programs found',
+                          body:
+                              'We could not load any programs from Supabase yet. Please try again in a moment.',
+                        );
+                      }
                       print(
-                        '📊 [CoachHomeScreen] Catalogue loaded: ${catalogue?.length ?? 0} programs',
+                        '📊 [CoachHomeScreen] Catalogue loaded: ${catalogue.length ?? 0} programs',
                       );
                       final matchingItems = catalogue
-                          ?.where(
+                          .where(
                             (item) => _catalogueProgramId(item) == activeId,
                           )
                           .toList();
                       print(
-                        '📊 [CoachHomeScreen] Matching items for activeId $activeId: ${matchingItems?.length ?? 0}',
+                        '📊 [CoachHomeScreen] Matching items for activeId $activeId: ${matchingItems.length ?? 0}',
                       );
 
-                      final activeItem = matchingItems?.isNotEmpty == true
-                          ? matchingItems!.first
-                          : null;
+                      final selectedGoals = selectedGoalsAsync.maybeWhen(
+                        data: (goals) => goals,
+                        orElse: () => const <String>[],
+                      );
+                      final rotatedProgram = _pickProgramForGoals(
+                        catalogue,
+                        selectedGoals,
+                      );
+                      final activeItem = rotatedProgram ??
+                          (matchingItems.isNotEmpty == true
+                              ? matchingItems.first
+                              : null);
                       print(
                         '📊 [CoachHomeScreen] Active item: ${activeItem != null ? 'found' : 'null'}',
                       );
+
+                      final sessionProgramId =
+                          _catalogueProgramId(activeItem) ?? activeId;
+                      final sessionDailyContentAsync = sessionProgramId == null
+                          ? const AsyncValue.data(null)
+                          : ref.watch(
+                              dailyContentForProgramDayProvider((
+                                programId: sessionProgramId,
+                                dayNumber: 1,
+                              )),
+                            );
+                      final dailyContent = sessionDailyContentAsync.maybeWhen(
+                        data: (dailyContent) => dailyContent,
+                        error: (error, stack) {
+                          debugPrint(
+                            '[CoachHomeScreen] Daily content error: $error',
+                          );
+                          debugPrintStack(stackTrace: stack);
+                          return null;
+                        },
+                        orElse: () => null,
+                      );
+                      if (dailyContent == null && activeItem == null) {
+                        return _buildEmptyState(
+                          context,
+                          title: 'Session not ready yet',
+                          body:
+                              'We could not find a Day 1 session for your program. Please check back soon.',
+                        );
+                      }
 
                       final dayTitle = progressAsync.maybeWhen(
                         data: (progress) =>
                             progress != null ? 'Day ${progress.day}' : 'Start',
                         orElse: () => 'Start',
                       );
-                      final programTitle = dailyContentAsync.maybeWhen(
-                        data: (dailyContent) =>
-                            dailyContent?.title ?? 'Daily Session',
-                        orElse: () => activeItem != null
-                            ? _extractTitle(activeItem)
-                            : 'Program',
-                      );
+                      final programTitle = dailyContent?.title ??
+                          (activeItem != null
+                              ? _extractTitle(activeItem)
+                              : 'Program');
 
                       // Check if today's task is completed
                       final isTodayCompleted = progressAsync.maybeWhen(
@@ -870,9 +1021,8 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                                             await HapticFeedback.lightImpact();
 
                                             // Navigate to video player screen with Hero transition
-                                            final activeProgramId = ref.read(
-                                              app.activeProgramIdProvider,
-                                            );
+                                            final activeProgramId =
+                                                sessionProgramId;
                                             final programDetails =
                                                 programDetailsAsync.maybeWhen(
                                                   data: (data) => data,
@@ -997,11 +1147,11 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                             backgroundColor: AlignaColors.accent.withOpacity(
                               0.9,
                             ),
+                            tooltip: 'Reflect on your journey',
                             child: const Icon(
                               Icons.edit_note,
                               color: Colors.white,
                             ),
-                            tooltip: 'Reflect on your journey',
                           ),
                           // Frequency (Soundwave icon) - with emotional tooltip
                           FloatingActionButton(
@@ -1013,8 +1163,8 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                             backgroundColor: AlignaColors.primary.withOpacity(
                               0.9,
                             ),
-                            child: const Icon(Icons.waves, color: Colors.white),
                             tooltip: 'Tune into healing frequencies',
+                            child: const Icon(Icons.waves, color: Colors.white),
                           ),
                           // Vision (Image icon) - with emotional tooltip
                           FloatingActionButton(
@@ -1024,11 +1174,11 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                               // TODO: Open user's Vision Board
                             },
                             backgroundColor: AlignaColors.gold.withOpacity(0.9),
+                            tooltip: 'Visualize your dreams',
                             child: const Icon(
                               Icons.visibility,
                               color: Colors.white,
                             ),
-                            tooltip: 'Visualize your dreams',
                           ),
                         ],
                       ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:aligna_app/theme/aligna_theme.dart';
-import 'package:aligna_app/utils/haptics.dart';
 
 class WelcomeCelebrationScreen extends StatefulWidget {
   final String userName;

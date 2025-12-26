@@ -5,7 +5,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/program.dart';
 import '../services/program_service.dart';
-import 'app_providers.dart';
 
 /// Provider for fetching a program by ID
 final programProvider = FutureProvider.family<Program?, String>((
