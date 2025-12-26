@@ -5,10 +5,11 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../providers/app_providers.dart';
 import '../theme/aligna_theme.dart';
+import 'home_sanctuary_screen.dart';
 import 'coach_home_screen.dart';
 import 'guidance_screen.dart';
 import 'programs_screen.dart';
-import 'settings_screen.dart';
+import 'profile_screen.dart';
 
 class AppShell extends ConsumerWidget {
   const AppShell({super.key});
@@ -21,10 +22,11 @@ class AppShell extends ConsumerWidget {
       body: IndexedStack(
         index: index,
         children: const [
-          CoachHomeScreen(),
+          HomeSanctuaryScreen(),
           GuidanceScreen(),
+          CoachHomeScreen(),
           ProgramsScreen(),
-          SettingsScreen(),
+          ProfileScreen(),
         ],
       ),
       bottomNavigationBar: Theme(
@@ -53,15 +55,19 @@ class AppShell extends ConsumerWidget {
           onDestinationSelected: (i) =>
               ref.read(shellTabIndexProvider.notifier).state = i,
           destinations: const [
-            NavigationDestination(icon: Icon(Icons.home), label: 'Coach'),
+            NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
             NavigationDestination(
               icon: Icon(Icons.auto_awesome),
-              label: 'Guidance',
+              label: 'Guide',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.chat_bubble_outline),
+              label: 'Coach',
             ),
             NavigationDestination(icon: Icon(Icons.list), label: 'Programs'),
             NavigationDestination(
-              icon: Icon(Icons.settings),
-              label: 'Settings',
+              icon: Icon(Icons.person_outline),
+              label: 'Profile',
             ),
           ],
         ),

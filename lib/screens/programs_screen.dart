@@ -131,7 +131,7 @@ class _ProgramsScreenState extends ConsumerState<ProgramsScreen> {
                   active: active,
                   activeId: activeId,
                   onResume: () =>
-                      ref.read(shellTabIndexProvider.notifier).state = 0,
+                      ref.read(shellTabIndexProvider.notifier).state = 2,
                   onClear: () async {
                     await Prefs.clearActiveProgramId();
                     ref.read(activeProgramIdProvider.notifier).state = null;
@@ -188,7 +188,7 @@ class _ProgramsScreenState extends ConsumerState<ProgramsScreen> {
     ref.read(activeProgramIdProvider.notifier).state = programId;
 
     // Go back to Coach tab immediately (nice handoff)
-    ref.read(shellTabIndexProvider.notifier).state = 0;
+    ref.read(shellTabIndexProvider.notifier).state = 2;
   }
 }
 

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../providers/user_context_provider.dart';
 import '../services/tarot_service.dart';
 import '../theme/aligna_theme.dart';
 
@@ -16,6 +17,7 @@ class GuidanceScreen extends ConsumerStatefulWidget {
 
 class _GuidanceScreenState extends ConsumerState<GuidanceScreen> {
   late Future<TarotCard?> _cardFuture;
+  String? _lastSyncedCardId;
 
   @override
   void initState() {
@@ -69,6 +71,15 @@ class _GuidanceScreenState extends ConsumerState<GuidanceScreen> {
                       body:
                           'We could not fetch your card right now. Please check that tarot_cards is populated and try again soon.',
                     );
+                  }
+
+                  if (_lastSyncedCardId != card.id) {
+                    _lastSyncedCardId = card.id;
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      ref.read(userContextProvider.notifier).updateFromTarot(
+                            card,
+                          );
+                    });
                   }
 
                   return Column(

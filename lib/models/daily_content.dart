@@ -33,14 +33,14 @@ class DailyContent {
 
   factory DailyContent.fromJson(Map<String, dynamic> json) {
     return DailyContent(
-      id: json['id'] as String,
-      languageCode: json['language_code'] as String,
-      programId: json['program_id'] as String,
-      dayNumber: json['day_number'] as int,
-      title: json['title'] as String,
-      focus: json['focus'] as String,
-      question: json['question'] as String,
-      microAction: json['micro_action'] as String,
+      id: (json['id'] as String?) ?? '',
+      languageCode: (json['language_code'] as String?) ?? '',
+      programId: (json['program_id'] as String?) ?? '',
+      dayNumber: (json['day_number'] as num?)?.toInt() ?? 1,
+      title: (json['title'] as String?) ?? '',
+      focus: (json['focus'] as String?) ?? '',
+      question: (json['question'] as String?) ?? '',
+      microAction: (json['micro_action'] as String?) ?? '',
       audioUrl: json['audio_url'] as String?,
       journalPrompt: json['journal_prompt'] as String?,
       mentorMessage: json['mentor_message'] as String?,
@@ -83,9 +83,9 @@ class AuraConfig {
 
   factory AuraConfig.fromJson(Map<String, dynamic> json) {
     return AuraConfig(
-      primaryColor: json['primaryColor'] as String,
-      secondaryColor: json['secondaryColor'] as String,
-      pulseSpeed: (json['pulseSpeed'] as num).toDouble(),
+      primaryColor: (json['primaryColor'] as String?) ?? '#FFFFFF',
+      secondaryColor: (json['secondaryColor'] as String?) ?? '#000000',
+      pulseSpeed: (json['pulseSpeed'] as num?)?.toDouble() ?? 1.0,
     );
   }
 

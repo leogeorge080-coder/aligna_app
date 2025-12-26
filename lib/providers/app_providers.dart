@@ -21,7 +21,7 @@ final timePreferenceProvider = StateProvider<int>(
 final onboardingCompletedProvider = StateProvider<bool>((ref) => false);
 final shellTabIndexProvider = StateProvider<int>(
   (ref) => 0,
-); // 0 Coach, 1 Guidance, 2 Programs, 3 Settings
+); // 0 Home, 1 Guide, 2 Coach, 3 Programs, 4 Profile
 
 final localeProvider = Provider<Locale>((ref) {
   final lang = ref.watch(languageProvider);

@@ -6,6 +6,7 @@ import '../providers/app_providers.dart';
 import '../widgets/choice_card.dart';
 import '../utils/haptics.dart';
 import '../persistence/prefs.dart';
+import '../services/user_events_service.dart';
 import 'app_shell.dart';
 
 class MoodSelectScreen extends ConsumerStatefulWidget {
@@ -25,6 +26,10 @@ class _MoodSelectScreenState extends ConsumerState<MoodSelectScreen> {
     // ✅ Save mood for the current greeting window
     await Prefs.saveMoodForNow(mood);
     ref.read(moodProvider.notifier).state = mood;
+    await UserEventsService.logEvent(
+      eventType: 'mood_log',
+      payload: {'mood': mood.name},
+    );
 
     if (!mounted) return;
 

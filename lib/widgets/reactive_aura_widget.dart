@@ -147,6 +147,8 @@ class ReactiveAuraWidget extends ConsumerStatefulWidget {
   final ProgramType? programType; // For backward compatibility
   final double restIntensity;
   final List<String>? mentorMessages;
+  final List<Color>? overrideAuraColors;
+  final Duration? colorCycleDuration;
 
   const ReactiveAuraWidget({
     super.key,
@@ -156,6 +158,8 @@ class ReactiveAuraWidget extends ConsumerStatefulWidget {
     this.programType, // For backward compatibility
     this.restIntensity = 0.1,
     this.mentorMessages,
+    this.overrideAuraColors,
+    this.colorCycleDuration,
   }) : assert(
          programId != null || programType != null,
          'Either programId or programType must be provided',
@@ -180,6 +184,7 @@ class _ReactiveAuraWidgetState extends ConsumerState<ReactiveAuraWidget>
   // Universe theme state
   late AnimationController _nebulaController;
   late AnimationController _rippleController;
+  AnimationController? _colorCycleController;
   List<StarParticle> _starParticles = [];
   final List<RippleEffect> _activeRipples = [];
   Offset _gyroscopeOffset = Offset.zero;
@@ -210,6 +215,14 @@ class _ReactiveAuraWidgetState extends ConsumerState<ReactiveAuraWidget>
       duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
+
+    final overrideColors = widget.overrideAuraColors ?? const <Color>[];
+    if (overrideColors.length > 1) {
+      _colorCycleController = AnimationController(
+        duration: widget.colorCycleDuration ?? const Duration(seconds: 12),
+        vsync: this,
+      )..repeat();
+    }
 
     // Initialize starfield particles
     _initializeStarfield();
@@ -430,6 +443,7 @@ class _ReactiveAuraWidgetState extends ConsumerState<ReactiveAuraWidget>
     _animationController.dispose();
     _nebulaController.dispose();
     _rippleController.dispose();
+    _colorCycleController?.dispose();
     _gyroscopeSubscription?.cancel();
     _audioPlayer.dispose();
     _messageTimer?.cancel();
@@ -447,6 +461,11 @@ class _ReactiveAuraWidgetState extends ConsumerState<ReactiveAuraWidget>
 
     final programType = widget.programType ?? ProgramType.support;
     final universeTheme = universeThemes[programType]!;
+    final overrideColors = widget.overrideAuraColors;
+    final nebulaColors = _resolveNebulaColors(
+      overrideColors,
+      universeTheme.nebulaColors,
+    );
 
     return RepaintBoundary(
       child: Stack(
@@ -487,7 +506,7 @@ class _ReactiveAuraWidgetState extends ConsumerState<ReactiveAuraWidget>
                 angle: _nebulaController.value * 2 * pi,
                 child: CustomPaint(
                   painter: NebulaPainter(
-                    colors: universeTheme.nebulaColors,
+                    colors: nebulaColors,
                     volume: _currentVolume,
                     animationValue: _nebulaController.value,
                   ),
@@ -504,32 +523,49 @@ class _ReactiveAuraWidgetState extends ConsumerState<ReactiveAuraWidget>
           ),
 
           // Legacy Aura Painter (kept for compatibility but layered under new effects)
-          auraColorsAsync.when(
-            data: (colors) => CustomPaint(
-              painter: AuraPainter(
-                animationValue: _animationController.value,
-                volume: _currentVolume,
-                auraColors: colors ?? [Colors.transparent, Colors.transparent],
+          if (overrideColors != null && overrideColors.isNotEmpty)
+            AnimatedBuilder(
+              animation:
+                  _colorCycleController ?? _animationController,
+              builder: (context, child) {
+                final resolved = _resolveAuraColors(overrideColors);
+                return CustomPaint(
+                  painter: AuraPainter(
+                    animationValue: _animationController.value,
+                    volume: _currentVolume,
+                    auraColors: resolved,
+                  ),
+                  child: const SizedBox(height: 500, width: 500),
+                );
+              },
+            )
+          else
+            auraColorsAsync.when(
+              data: (colors) => CustomPaint(
+                painter: AuraPainter(
+                  animationValue: _animationController.value,
+                  volume: _currentVolume,
+                  auraColors: colors ?? [Colors.transparent, Colors.transparent],
+                ),
+                child: const SizedBox(height: 500, width: 500),
               ),
-              child: const SizedBox(height: 500, width: 500),
-            ),
-            loading: () => CustomPaint(
-              painter: AuraPainter(
-                animationValue: _animationController.value,
-                volume: _currentVolume,
-                auraColors: [Colors.transparent, Colors.transparent],
+              loading: () => CustomPaint(
+                painter: AuraPainter(
+                  animationValue: _animationController.value,
+                  volume: _currentVolume,
+                  auraColors: [Colors.transparent, Colors.transparent],
+                ),
+                child: const SizedBox(height: 500, width: 500),
               ),
-              child: const SizedBox(height: 500, width: 500),
-            ),
-            error: (error, stack) => CustomPaint(
-              painter: AuraPainter(
-                animationValue: _animationController.value,
-                volume: _currentVolume,
-                auraColors: [Colors.transparent, Colors.transparent],
+              error: (error, stack) => CustomPaint(
+                painter: AuraPainter(
+                  animationValue: _animationController.value,
+                  volume: _currentVolume,
+                  auraColors: [Colors.transparent, Colors.transparent],
+                ),
+                child: const SizedBox(height: 500, width: 500),
               ),
-              child: const SizedBox(height: 500, width: 500),
             ),
-          ),
           // Layer 2: Lumi Image (Static)
           Image.asset(
             widget.lumiImageUrl,
@@ -650,12 +686,13 @@ class _ReactiveAuraWidgetState extends ConsumerState<ReactiveAuraWidget>
 
   void _triggerRipple() {
     final theme = universeThemes[widget.programType ?? ProgramType.support]!;
+    final rippleColor = _resolveRippleColor(theme.rippleColor);
     setState(() {
       _activeRipples.add(
         RippleEffect(
           center: const Offset(250, 250), // Center of the aura
           maxRadius: 300,
-          color: theme.rippleColor,
+          color: rippleColor,
         ),
       );
     });
@@ -688,6 +725,47 @@ class _ReactiveAuraWidgetState extends ConsumerState<ReactiveAuraWidget>
       default:
         return 'support';
     }
+  }
+
+  List<Color> _resolveAuraColors(List<Color> colors) {
+    if (colors.isEmpty) {
+      return [const Color(0xFFE6F3FF), const Color(0xFFB3D9FF)];
+    }
+    if (colors.length == 1 || _colorCycleController == null) {
+      final base = colors.first;
+      final secondary = Color.lerp(base, Colors.white, 0.35) ?? base;
+      return [base, secondary];
+    }
+
+    final progress = _colorCycleController!.value * colors.length;
+    final index = progress.floor() % colors.length;
+    final next = (index + 1) % colors.length;
+    final t = progress - progress.floor();
+    final blended = Color.lerp(colors[index], colors[next], t) ?? colors[index];
+    final secondary = Color.lerp(blended, Colors.white, 0.35) ?? blended;
+    return [blended, secondary];
+  }
+
+  List<Color> _resolveNebulaColors(
+    List<Color>? override,
+    List<Color> fallback,
+  ) {
+    if (override == null || override.isEmpty) return fallback;
+    if (override.length >= 3) return override;
+    if (override.length == 2) {
+      final mid = Color.lerp(override[0], override[1], 0.5) ?? override[0];
+      return [override[0], mid, override[1]];
+    }
+    final base = override.first;
+    final lighter = Color.lerp(base, Colors.white, 0.4) ?? base;
+    final darker = Color.lerp(base, Colors.black, 0.4) ?? base;
+    return [lighter, base, darker];
+  }
+
+  Color _resolveRippleColor(Color fallback) {
+    final override = widget.overrideAuraColors;
+    if (override == null || override.isEmpty) return fallback;
+    return override.first;
   }
 }
 

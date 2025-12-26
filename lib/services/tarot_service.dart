@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'user_events_service.dart';
+
 class TarotCard {
   final String id;
   final String cardName;
@@ -98,6 +100,14 @@ class TarotService {
         DateTime.now().millisecondsSinceEpoch,
       );
       await prefs.setString(cardKey, json.encode(card.toJson()));
+
+      await UserEventsService.logEvent(
+        eventType: 'tarot_draw',
+        payload: {
+          'card': card.cardName,
+          'track': card.trackType ?? '',
+        },
+      );
 
       return card;
     } catch (e) {

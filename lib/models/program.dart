@@ -23,12 +23,12 @@ class Program {
 
   factory Program.fromJson(Map<String, dynamic> json) {
     return Program(
-      id: json['id'] as String,
-      slug: json['slug'] as String,
-      title: json['title'] as String,
-      description: json['description'] as String,
+      id: (json['id'] as String?) ?? '',
+      slug: (json['slug'] as String?) ?? '',
+      title: (json['title'] as String?) ?? '',
+      description: (json['description'] as String?) ?? '',
       themeColor: json['theme_color'] as String?,
-      track: json['track'] as String,
+      track: (json['track'] as String?) ?? '',
       durationDays: (json['duration_days'] as num?)?.toInt() ?? 7,
       isActive: json['is_active'] as bool? ?? true,
     );

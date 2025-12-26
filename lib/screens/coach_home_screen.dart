@@ -11,9 +11,13 @@ import '../providers/program_catalogue_provider.dart';
 import '../providers/program_progress_provider.dart';
 import '../providers/program_progress_store_provider.dart';
 import '../providers/resume_copy_provider.dart';
+import '../providers/user_context_provider.dart';
+import '../providers/user_events_provider.dart';
 import '../providers/user_preferences_provider.dart';
 import '../models/program.dart';
 import '../models/program_progress.dart';
+import '../models/user_context.dart';
+import '../models/user_event.dart';
 
 // ─────────────────────────────────────────────
 // App-level state & providers
@@ -50,6 +54,8 @@ import '../widgets/reactive_aura_widget.dart';
 import '../services/program_service.dart';
 import '../providers/daily_content_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../utils/frequency_colors.dart';
+import '../services/user_events_service.dart';
 
 class CoachHomeScreen extends ConsumerStatefulWidget {
   const CoachHomeScreen({super.key});
@@ -255,7 +261,7 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                ref.read(app.shellTabIndexProvider.notifier).state = 2;
+                ref.read(app.shellTabIndexProvider.notifier).state = 3;
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AlignaColors.primary,
@@ -560,53 +566,89 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
       _ensureRemoteProgress(activeId);
     }
 
+    final selectedGoalsAsync = ref.watch(selectedFrequenciesProvider);
+    final userContextAsync = ref.watch(userContextProvider);
+    final eventsAsync = ref.watch(userEventsProvider);
+
+    Widget bodyChild;
     if (activeId == null) {
-      return Scaffold(
-        backgroundColor: Colors.transparent,
-        body: AnimatedGradientBackground(
-          child: SafeArea(
-            child: _buildEmptyState(
-              context,
-              title: 'Choose your first program',
-              body:
-                  'We could not find an active program yet. Pick one to begin your first session.',
-            ),
-          ),
-        ),
+      bodyChild = _buildConsultationView(
+        context: context,
+        userName: userName,
+        eventsAsync: eventsAsync,
       );
-    }
+    } else {
+      final progressAsync = ref.watch(programProgressProvider);
 
-    final progressAsync = ref.watch(programProgressProvider);
-
-    // Get raw progress data for completion check
-    final rawProgressAsync = ref.watch(
+      // Get raw progress data for completion check
+      final rawProgressAsync = ref.watch(
             FutureProvider<ProgramProgress?>((ref) async {
               final store = ref.read(programProgressStoreProvider);
               return await store.read(activeId);
             }),
           );
 
-    final resumeAsync = ref.watch(resumeCopyProvider);
-
-    final selectedGoalsAsync = ref.watch(selectedFrequenciesProvider);
-
-    // Fetch program details for theme color
-    final programDetailsAsync = ref.watch(
+      // Fetch program details for theme color
+      final programDetailsAsync = ref.watch(
             FutureProvider<Map<String, dynamic>?>((ref) async {
               return await ProgramService.getProgramById(activeId);
             }),
           );
 
-    // Get theme color for dynamic button styling
-    final themeColorAsync = ref.watch(programThemeColorProvider(activeId));
+      // Get theme color for dynamic button styling
+      final themeColorAsync = ref.watch(programThemeColorProvider(activeId));
 
-    // Initialize from onboarding data instead of mood
+      bodyChild = _buildDashboardView(
+        context: context,
+        userName: userName,
+        activeId: activeId,
+        progressAsync: progressAsync,
+        rawProgressAsync: rawProgressAsync,
+        selectedGoalsAsync: selectedGoalsAsync,
+        userContextAsync: userContextAsync,
+        programDetailsAsync: programDetailsAsync,
+        themeColorAsync: themeColorAsync,
+        catalogueAsync: catalogueAsync,
+        eventsAsync: eventsAsync,
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AnimatedGradientBackground(
         child: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 350),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            child: KeyedSubtree(
+              key: ValueKey(activeId ?? 'consultation'),
+              child: SizedBox.expand(child: bodyChild),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDashboardView({
+    required BuildContext context,
+    required String userName,
+    required String activeId,
+    required AsyncValue<ProgramProgressUi?> progressAsync,
+    required AsyncValue<ProgramProgress?> rawProgressAsync,
+    required AsyncValue<List<String>> selectedGoalsAsync,
+    required AsyncValue<UserContext> userContextAsync,
+    required AsyncValue<Map<String, dynamic>?> programDetailsAsync,
+    required AsyncValue<Color?> themeColorAsync,
+    required AsyncValue<List<Program>> catalogueAsync,
+    required AsyncValue<List<UserEvent>> eventsAsync,
+  }) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.only(
+        bottom: 24 + MediaQuery.of(context).padding.bottom,
+      ),
+      child: Column(
               children: [
                 // Section A: The Greeting (Header)
                 Padding(
@@ -669,6 +711,41 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                       ],
                     ),
                   ),
+                ),
+                const SizedBox(height: 16),
+                Builder(
+                  builder: (context) {
+                    final progress = progressAsync.maybeWhen(
+                      data: (value) => value,
+                      orElse: () => null,
+                    );
+                    final goals = selectedGoalsAsync.maybeWhen(
+                      data: (value) => value,
+                      orElse: () => null,
+                    );
+                    final ctx = userContextAsync.maybeWhen(
+                      data: (value) => value,
+                      orElse: () => null,
+                    );
+                    final events = eventsAsync.maybeWhen(
+                      data: (value) => value,
+                      orElse: () => null,
+                    );
+                    final messages = _buildCoachMessages(
+                      userName: userName,
+                      progress: progress,
+                      goals: goals,
+                      context: ctx,
+                      events: events,
+                    );
+
+                    if (messages.isEmpty) return const SizedBox.shrink();
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: StaggeredCoachBubbles(messages: messages),
+                    );
+                  },
                 ),
                 const SizedBox(height: 32),
                 // Section B: The Hero Progress Circle
@@ -842,25 +919,30 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                         const Center(child: Text('Error loading progress')),
                   ),
                 // Section B.5: Reactive Aura (if program details loaded)
-                programDetailsAsync.maybeWhen(
-                  data: (programDetails) {
-                    if (programDetails != null &&
-                        programDetails['theme_color'] != null) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        child: ReactiveAuraWidget(
-                          lumiImageUrl: 'assets/coach/aligna_coach.png',
-                          programId: activeId,
-                          restIntensity: 0.3,
-                        ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Builder(
+                    builder: (context) {
+                      final selections = selectedGoalsAsync.maybeWhen(
+                        data: (value) => value,
+                        orElse: () => const <String>[],
                       );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                  orElse: () => const SizedBox.shrink(),
+                      final colors =
+                          frequencyColorsFromSelections(selections);
+                      return ReactiveAuraWidget(
+                        lumiImageUrl: 'assets/coach/aligna_coach.png',
+                        programId: activeId,
+                        restIntensity: 0.3,
+                        overrideAuraColors: colors.isNotEmpty
+                            ? colors
+                            : [AlignaColors.accent],
+                        colorCycleDuration: const Duration(seconds: 14),
+                      );
+                    },
+                  ),
                 ),
                 // Section C: The Primary Action (The "Start" Card)
                 Padding(
@@ -1036,6 +1118,16 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                                                   )
                                                 : ProgramType.support;
 
+                                            await UserEventsService.logEvent(
+                                              eventType: 'session_start',
+                                              payload: {
+                                                'program_id': activeProgramId,
+                                                'title': programTitle,
+                                                'track': programDetails?['track'] ??
+                                                    'support',
+                                              },
+                                            );
+
                                             Navigator.of(context).push(
                                               MaterialPageRoute(
                                                 builder: (context) =>
@@ -1133,6 +1225,25 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                           color: AlignaColors.subtext,
                         ),
                       ),
+                      userContextAsync.maybeWhen(
+                        data: (ctx) {
+                          if (ctx.lastTarotCard == 'neutral') {
+                            return const SizedBox.shrink();
+                          }
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              'Today’s guidance: ${ctx.lastTarotCard}',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: AlignaColors.subtext,
+                              ),
+                            ),
+                          );
+                        },
+                        orElse: () => const SizedBox.shrink(),
+                      ),
                       const SizedBox(height: 12),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1190,9 +1301,110 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                 ), // Extra bottom padding for scroll safety
               ],
             ),
-          ),
-        ),
-      ),
     );
+  }
+
+  Widget _buildConsultationView({
+    required BuildContext context,
+    required String userName,
+    required AsyncValue<List<UserEvent>> eventsAsync,
+  }) {
+    final events = eventsAsync.maybeWhen(
+      data: (value) => value,
+      orElse: () => const <UserEvent>[],
+    );
+    final messages = _buildConsultationMessages(
+      userName: userName,
+      events: events,
+    );
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+      children: [
+        for (final message in messages) ...[
+          CoachBubble(text: message),
+          const SizedBox(height: 10),
+        ],
+        const SizedBox(height: 8),
+        ElevatedButton(
+          onPressed: () {
+            ref.read(app.shellTabIndexProvider.notifier).state = 3;
+          },
+          child: const Text('Choose a journey'),
+        ),
+      ],
+    );
+  }
+
+  List<String> _buildConsultationMessages({
+    required String userName,
+    required List<UserEvent> events,
+  }) {
+    final messages = <String>[
+      'Welcome back, $userName.',
+      "Let's prepare your journey together.",
+      'What do you want to shift this season?',
+      "Pick a program and I'll shape your sessions around it.",
+    ];
+
+    for (final event in events) {
+      final line = _eventToMessage(event);
+      if (line != null) messages.add(line);
+    }
+
+    return messages;
+  }
+
+  List<String> _buildCoachMessages({
+    required String userName,
+    required ProgramProgressUi? progress,
+    required List<String>? goals,
+    required UserContext? context,
+    required List<UserEvent>? events,
+  }) {
+    final messages = <String>[];
+    if (progress != null) {
+      final percent = ((progress.day / progress.totalDays) * 100).round();
+      messages.add(
+        "You are $percent% through your shift, $userName! Today's session is ready.",
+      );
+    } else {
+      messages.add('We’re getting your path ready, $userName.');
+    }
+
+    final normalizedGoals = goals ?? const <String>[];
+    if (normalizedGoals.isNotEmpty) {
+      messages.add('Your focus: ${normalizedGoals.join(', ')}.');
+    }
+
+    if (context != null && context.streakCount > 0) {
+      messages.add('Streak check: ${context.streakCount} days strong.');
+    }
+
+    final recentEvents = events ?? const <UserEvent>[];
+    for (final event in recentEvents) {
+      final line = _eventToMessage(event);
+      if (line != null) messages.add(line);
+    }
+
+    return messages;
+  }
+
+  String? _eventToMessage(UserEvent event) {
+    switch (event.eventType) {
+      case 'tarot_draw':
+        final card = (event.eventPayload['card'] as String?) ?? 'your card';
+        return 'Your guidance card today: $card.';
+      case 'mood_log':
+        final mood = (event.eventPayload['mood'] as String?) ?? 'neutral';
+        return 'Thanks for sharing you feel $mood.';
+      case 'session_start':
+        final title = (event.eventPayload['title'] as String?) ?? 'your session';
+        return 'Session started: $title.';
+      case 'habit_complete':
+        return 'Nice work completing a habit today.';
+      default:
+        return null;
+    }
   }
 }
