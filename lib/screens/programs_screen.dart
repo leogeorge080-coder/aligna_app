@@ -26,7 +26,12 @@ class _ProgramsScreenState extends ConsumerState<ProgramsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final media = MediaQuery.of(context);
+    final textScale = media.textScaleFactor.clamp(1.0, 1.1);
+
+    return MediaQuery(
+      data: media.copyWith(textScaleFactor: textScale),
+      child: Scaffold(
       appBar: AppBar(
         title: const Text('Programs'),
         actions: [
@@ -180,6 +185,7 @@ class _ProgramsScreenState extends ConsumerState<ProgramsScreen> {
           );
         },
       ),
+    ),
     );
   }
 

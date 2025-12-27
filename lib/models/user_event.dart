@@ -4,6 +4,7 @@ class UserEvent {
   final String eventType;
   final Map<String, dynamic> eventPayload;
   final DateTime createdAt;
+  final String? tarotInsight;
 
   const UserEvent({
     required this.id,
@@ -11,6 +12,7 @@ class UserEvent {
     required this.eventType,
     required this.eventPayload,
     required this.createdAt,
+    this.tarotInsight,
   });
 
   factory UserEvent.fromJson(Map<String, dynamic> json) {
@@ -22,6 +24,7 @@ class UserEvent {
           const <String, dynamic>{},
       createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ??
           DateTime.now().toUtc(),
+      tarotInsight: json['tarot_insight'] as String?,
     );
   }
 }

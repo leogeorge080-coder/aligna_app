@@ -9,6 +9,7 @@ class UserEventsService {
   static Future<void> logEvent({
     required String eventType,
     Map<String, dynamic>? payload,
+    String? tarotInsight,
   }) async {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return;
@@ -17,6 +18,8 @@ class UserEventsService {
       'user_id': userId,
       'event_type': eventType,
       'event_payload': payload ?? const <String, dynamic>{},
+      if (tarotInsight != null && tarotInsight.trim().isNotEmpty)
+        'tarot_insight': tarotInsight.trim(),
     };
 
     try {
@@ -45,5 +48,34 @@ class UserEventsService {
               .map((row) => UserEvent.fromJson(row))
               .toList(growable: false),
         );
+  }
+
+  static Future<List<UserEvent>> fetchRecentEvents({
+    int limit = 3,
+    String? type,
+  }) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return const <UserEvent>[];
+
+    try {
+      var query = _supabase
+          .from('user_events')
+          .select('*')
+          .eq('user_id', userId);
+      if (type != null && type.trim().isNotEmpty) {
+        query = query.eq('event_type', type.trim());
+      }
+      final response = await query
+          .order('created_at', ascending: false)
+          .limit(limit);
+      return response
+          .map((row) => UserEvent.fromJson(row))
+          .toList(growable: false);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[UserEventsService] Failed to fetch events: $e');
+      }
+      return const <UserEvent>[];
+    }
   }
 }

@@ -39,6 +39,7 @@ dependencies:
   # iOS style icons
   cupertino_icons: ^1.0.8
   sensors_plus: ^7.0.0
+  flutter_local_notifications: ^17.1.2
 
 dev_dependencies:
   flutter_test:
@@ -51,6 +52,7 @@ flutter:
   assets:
     - assets/coach/
     - assets/icon/
+    - assets/shaders/
 flutter_icons:
   android: true
   ios: true

@@ -11,6 +11,7 @@ enum HeartMood { low, high }
 final languageProvider = StateProvider<String?>((ref) => null);
 final userNameProvider = StateProvider<String?>((ref) => null);
 final moodProvider = StateProvider<AlignaMood?>((ref) => null);
+final currentMoodProvider = StateProvider<String?>((ref) => null);
 final heartMoodProvider = StateProvider<HeartMood?>((ref) => null);
 final activeProgramIdProvider = StateProvider<String?>((ref) => null);
 final selectedProgramTypeProvider = StateProvider<ProgramType?>((ref) => null);

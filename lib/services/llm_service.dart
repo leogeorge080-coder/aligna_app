@@ -62,7 +62,49 @@ class LlmService {
     );
   }
 
+  static Future<String?> generateTarotInsight({
+    required String cardName,
+    required String programTitle,
+    required String category,
+    required String userName,
+  }) async {
+    final prompt =
+        'You are a soulful guide. Interpret $cardName specifically through the lens of $programTitle for $userName. Keep it under 30 words and deeply encouraging.';
+    try {
+      final data = await _callRaw(
+        payload: {
+          'mode': 'tarot_insight',
+          'prompt': prompt,
+          'category': category,
+          'program_title': programTitle,
+        },
+      );
+      final message = (data['message'] ?? '').toString().trim();
+      if (message.isNotEmpty) return message;
+    } catch (_) {}
+    return 'Your card invites hopeful momentum for $programTitle.';
+  }
+
   static Future<CoachReply> _callCoachFunction({
+    required Map<String, dynamic> payload,
+  }) async {
+    final data = await _callRaw(payload: payload);
+
+    // Support either:
+    // 1) { "message": "..." }
+    // 2) { "message": "...", "micro_action": "...", "closure": "..." }
+    final message = (data['message'] ?? '').toString().trim();
+    final micro = (data['micro_action'] ?? '').toString().trim();
+    final closure = (data['closure'] ?? '').toString().trim();
+
+    return CoachReply(
+      message: message,
+      microAction: micro.isEmpty ? null : micro,
+      closure: closure.isEmpty ? null : closure,
+    );
+  }
+
+  static Future<Map<String, dynamic>> _callRaw({
     required Map<String, dynamic> payload,
   }) async {
     final uri = Uri.parse(_endpoint);
@@ -96,18 +138,7 @@ class LlmService {
       throw Exception('Invalid JSON: ${res.body}');
     }
 
-    // Support either:
-    // 1) { "message": "..." }
-    // 2) { "message": "...", "micro_action": "...", "closure": "..." }
-    final message = (data['message'] ?? '').toString().trim();
-    final micro = (data['micro_action'] ?? '').toString().trim();
-    final closure = (data['closure'] ?? '').toString().trim();
-
-    return CoachReply(
-      message: message,
-      microAction: micro.isEmpty ? null : micro,
-      closure: closure.isEmpty ? null : closure,
-    );
+    return data;
   }
 
   static String _langCode(String language) {

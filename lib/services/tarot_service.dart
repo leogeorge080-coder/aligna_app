@@ -5,6 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../persistence/prefs.dart';
+import 'llm_service.dart';
+import 'program_service.dart';
 import 'user_events_service.dart';
 
 class TarotCard {
@@ -95,21 +98,49 @@ class TarotService {
         return null;
       }
 
+      final activeId = await Prefs.loadActiveProgramId();
+      String programTitle = 'your path';
+      String category = '';
+      if (activeId != null) {
+        final program = await ProgramService.getProgramObjectById(activeId);
+        if (program != null) {
+          programTitle = program.title.isNotEmpty ? program.title : programTitle;
+          category = program.track;
+        }
+      }
+
+      final insight = await LlmService.generateTarotInsight(
+        cardName: card.cardName,
+        programTitle: programTitle,
+        category: category,
+        userName: 'Leo',
+      );
+      final contextualCard = TarotCard(
+        id: card.id,
+        cardName: card.cardName,
+        imageUrl: card.imageUrl,
+        aiInsight: insight ?? card.aiInsight,
+        trackType: card.trackType,
+      );
+
       await prefs.setInt(
         tsKey,
         DateTime.now().millisecondsSinceEpoch,
       );
-      await prefs.setString(cardKey, json.encode(card.toJson()));
+      await prefs.setString(cardKey, json.encode(contextualCard.toJson()));
 
       await UserEventsService.logEvent(
         eventType: 'tarot_draw',
         payload: {
           'card': card.cardName,
           'track': card.trackType ?? '',
+          'program_title': programTitle,
+          'category': category,
         },
+        tarotInsight: insight,
       );
 
-      return card;
+      return contextualCard;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[TarotService] Failed to fetch tarot card: $e');

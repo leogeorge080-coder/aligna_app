@@ -19,24 +19,24 @@ import '../models/program_progress.dart';
 import '../models/user_context.dart';
 import '../models/user_event.dart';
 
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 // App-level state & providers
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 import 'package:aligna_app/providers/app_providers.dart' as app;
 import '../providers/coach_llm_provider.dart';
 import '../providers/micro_action_provider.dart';
 import '../providers/coach_enhance_providers.dart';
 import '../services/coach_enhance_service.dart';
 
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 // App infrastructure
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 import '../l10n/l10n.dart';
 import '../persistence/prefs.dart';
 
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 // UI / theme / utilities
-// ─────────────────────────────────────────────
+// ---------------------------------------------
 import '../theme/aligna_theme.dart';
 import '../utils/haptics.dart';
 import '../widgets/coach_bubble.dart';
@@ -56,6 +56,8 @@ import '../providers/daily_content_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/frequency_colors.dart';
 import '../services/user_events_service.dart';
+import '../services/notification_manager.dart';
+import '../widgets/liquid_progress_orb.dart';
 
 class CoachHomeScreen extends ConsumerStatefulWidget {
   const CoachHomeScreen({super.key});
@@ -86,6 +88,8 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
   double _progressValue = 0.0;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
+  bool _didCompleteHaptic = false;
+  final List<String> _consultationGoals = [];
 
   // Daily refresh timer
   Timer? _dailyRefreshTimer;
@@ -141,6 +145,11 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
 
     // Pre-cache audio for active program
     _preCacheAudio();
+
+    // Gentle notification check (non-blocking)
+    Future.microtask(() {
+      NotificationManager.checkAndNotifyIfMissedSession();
+    });
 
   }
 
@@ -509,9 +518,9 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
         .where((g) => g.isNotEmpty)
         .toList();
     if (normalizedGoals.isEmpty) return null;
-
-    final days = DateTime.now().difference(DateTime(2020, 1, 1)).inDays;
-    final target = normalizedGoals[days % normalizedGoals.length];
+    final daysSinceEpoch =
+        DateTime.now().difference(DateTime(2020, 1, 1)).inDays;
+    final target = normalizedGoals[daysSinceEpoch % normalizedGoals.length];
 
     bool matchesGoal(Program p) {
       final t = _normalizeTrack(p.track);
@@ -546,6 +555,7 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
 
     final appMood = ref.watch(app.moodProvider);
     final heartMood = ref.watch(app.heartMoodProvider);
+    final currentMood = ref.watch(app.currentMoodProvider);
     final replyState = ref.watch(coachLlmProvider);
 
     final actionText = ref.watch(microActionTextProvider);
@@ -610,20 +620,27 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
         themeColorAsync: themeColorAsync,
         catalogueAsync: catalogueAsync,
         eventsAsync: eventsAsync,
+        currentMood: currentMood,
       );
     }
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: AnimatedGradientBackground(
-        child: SafeArea(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 350),
-            switchInCurve: Curves.easeOut,
-            switchOutCurve: Curves.easeIn,
-            child: KeyedSubtree(
-              key: ValueKey(activeId ?? 'consultation'),
-              child: SizedBox.expand(child: bodyChild),
+    final media = MediaQuery.of(context);
+    final textScale = media.textScaleFactor.clamp(1.0, 1.1);
+
+    return MediaQuery(
+      data: media.copyWith(textScaleFactor: textScale),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: AnimatedGradientBackground(
+          child: SafeArea(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 350),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              child: KeyedSubtree(
+                key: ValueKey(activeId ?? 'consultation'),
+                child: SizedBox.expand(child: bodyChild),
+              ),
             ),
           ),
         ),
@@ -643,6 +660,7 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
     required AsyncValue<Color?> themeColorAsync,
     required AsyncValue<List<Program>> catalogueAsync,
     required AsyncValue<List<UserEvent>> eventsAsync,
+    required String? currentMood,
   }) {
     return SingleChildScrollView(
       padding: EdgeInsets.only(
@@ -757,41 +775,31 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                       final progressPercent = (currentProgress * 100).round();
                       final dayText = progress != null
                           ? progress.isComplete
-                                ? 'Final day · ${progress.totalDays} of ${progress.totalDays}'
+                                ? 'Final day ${progress.totalDays} of ${progress.totalDays}'
                                 : 'Day ${progress.day} of ${progress.totalDays}'
                           : 'No progress';
+
+                      if (progressPercent >= 100 && !_didCompleteHaptic) {
+                        HapticFeedback.mediumImpact();
+                        _didCompleteHaptic = true;
+                      } else if (progressPercent < 100 && _didCompleteHaptic) {
+                        _didCompleteHaptic = false;
+                      }
 
                       return Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Large circular progress bar
-                            SizedBox(
-                              width: 160,
-                              height: 160,
-                              child: TweenAnimationBuilder<double>(
-                                tween: Tween<double>(
-                                  begin: 0.0,
-                                  end: currentProgress,
-                                ),
-                                duration: const Duration(seconds: 2),
-                                curve: Curves.easeInOut,
-                                builder: (context, value, child) {
-                                  return CircularProgressIndicator(
-                                    value: value,
-                                    strokeWidth: 8,
-                                    backgroundColor: AlignaColors.border,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      themeColorAsync.maybeWhen(
-                                        data: (color) =>
-                                            color ?? AlignaColors.accent,
-                                        orElse: () => AlignaColors.accent,
-                                      ),
-                                    ),
-                                  );
-                                },
+                            LiquidProgressOrb(
+                              progress: currentProgress,
+                              primary: themeColorAsync.maybeWhen(
+                                data: (color) =>
+                                    color ?? AlignaColors.accent,
+                                orElse: () => AlignaColors.accent,
                               ),
+                              secondary: AlignaColors.primary.withOpacity(0.5),
+                              size: 180,
                             ),
                             const SizedBox(height: 8),
                             // Big Text: "70%"
@@ -860,7 +868,7 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    '7 day streak! 🔥',
+                                    '7 day streak!',
                                     style: GoogleFonts.montserrat(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
@@ -897,8 +905,8 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                                     const SizedBox(width: 6),
                                     Text(
                                       progressPercent >= 90
-                                          ? 'Almost there! 🌟'
-                                          : 'Great progress! ⭐',
+                                          ? 'Almost there!'
+                                          : 'Great progress! ?',
                                       style: GoogleFonts.montserrat(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w500,
@@ -932,14 +940,20 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                       );
                       final colors =
                           frequencyColorsFromSelections(selections);
-                      return ReactiveAuraWidget(
-                        lumiImageUrl: 'assets/coach/aligna_coach.png',
-                        programId: activeId,
-                        restIntensity: 0.3,
-                        overrideAuraColors: colors.isNotEmpty
-                            ? colors
-                            : [AlignaColors.accent],
-                        colorCycleDuration: const Duration(seconds: 14),
+                      final energyLabel =
+                          selections.isNotEmpty ? selections.first : 'neutral';
+                      return Semantics(
+                        label:
+                            'Current Energy: $energyLabel. Breathing with you.',
+                        child: ReactiveAuraWidget(
+                          lumiImageUrl: 'assets/coach/aligna_coach.png',
+                          programId: activeId,
+                          restIntensity: 0.3,
+                          overrideAuraColors: colors.isNotEmpty
+                              ? colors
+                              : [AlignaColors.accent],
+                          colorCycleDuration: const Duration(seconds: 14),
+                        ),
                       );
                     },
                   ),
@@ -984,7 +998,7 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                         );
                       }
                       print(
-                        '📊 [CoachHomeScreen] Catalogue loaded: ${catalogue.length ?? 0} programs',
+                        '[CoachHomeScreen] Catalogue loaded: ${catalogue.length} programs',
                       );
                       final matchingItems = catalogue
                           .where(
@@ -992,7 +1006,7 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                           )
                           .toList();
                       print(
-                        '📊 [CoachHomeScreen] Matching items for activeId $activeId: ${matchingItems.length ?? 0}',
+                        '[CoachHomeScreen] Matching items for activeId $activeId: ${matchingItems.length}',
                       );
 
                       final selectedGoals = selectedGoalsAsync.maybeWhen(
@@ -1008,7 +1022,7 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                               ? matchingItems.first
                               : null);
                       print(
-                        '📊 [CoachHomeScreen] Active item: ${activeItem != null ? 'found' : 'null'}',
+                        '[CoachHomeScreen] Active item: ${activeItem != null ? 'found' : 'null'}',
                       );
 
                       final sessionProgramId =
@@ -1042,8 +1056,11 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                       }
 
                       final dayTitle = progressAsync.maybeWhen(
-                        data: (progress) =>
-                            progress != null ? 'Day ${progress.day}' : 'Start',
+                        data: (progress) {
+                          if (progress == null) return 'Start';
+                          if (progress.isComplete) return 'Final day';
+                          return 'Day ${progress.day}';
+                        },
                         orElse: () => 'Start',
                       );
                       final programTitle = dailyContent?.title ??
@@ -1197,12 +1214,12 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                       );
                     },
                     loading: () {
-                      print('⏳ [CoachHomeScreen] Catalogue loading...');
+                      print('[CoachHomeScreen] Catalogue loading...');
                       return const Center(child: CircularProgressIndicator());
                     },
                     error: (error, stack) {
-                      print('❌ [CoachHomeScreen] Catalogue error: $error');
-                      print('❌ [CoachHomeScreen] Stack: $stack');
+                      print('[CoachHomeScreen] Catalogue error: $error');
+                      print('[CoachHomeScreen] Stack: $stack');
                       return Center(
                         child: Text('Error loading catalogue: $error'),
                       );
@@ -1233,7 +1250,7 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                           return Padding(
                             padding: const EdgeInsets.only(top: 6),
                             child: Text(
-                              'Today’s guidance: ${ctx.lastTarotCard}',
+                              "Today's guidance: ${ctx.lastTarotCard}",
                               style: GoogleFonts.montserrat(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
@@ -1248,49 +1265,81 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          // Journal (Pen icon) - with emotional tooltip
-                          FloatingActionButton(
-                            heroTag: 'journal',
-                            onPressed: () async {
-                              await AppHaptics.light();
-                              // TODO: Open blank reflection page
-                            },
-                            backgroundColor: AlignaColors.accent.withOpacity(
-                              0.9,
+                          if ((currentMood ?? '').toLowerCase() ==
+                              'overwhelmed') ...[
+                            FloatingActionButton(
+                              heroTag: 'grounding',
+                              onPressed: () async {
+                                await AppHaptics.light();
+                                // TODO: Open grounding session
+                              },
+                              backgroundColor:
+                                  AlignaColors.primary.withOpacity(0.9),
+                              tooltip: 'Grounding',
+                              child: const Icon(
+                                Icons.self_improvement,
+                                color: Colors.white,
+                              ),
                             ),
-                            tooltip: 'Reflect on your journey',
-                            child: const Icon(
-                              Icons.edit_note,
-                              color: Colors.white,
+                            FloatingActionButton(
+                              heroTag: 'release',
+                              onPressed: () async {
+                                await AppHaptics.light();
+                                // TODO: Open release session
+                              },
+                              backgroundColor:
+                                  AlignaColors.accent.withOpacity(0.9),
+                              tooltip: 'Release',
+                              child: const Icon(
+                                Icons.water_drop_outlined,
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
-                          // Frequency (Soundwave icon) - with emotional tooltip
-                          FloatingActionButton(
-                            heroTag: 'frequency',
-                            onPressed: () async {
-                              await AppHaptics.light();
-                              // TODO: Open mini-player for 528Hz/432Hz audio
-                            },
-                            backgroundColor: AlignaColors.primary.withOpacity(
-                              0.9,
+                          ] else ...[
+                            FloatingActionButton(
+                              heroTag: 'journal',
+                              onPressed: () async {
+                                await AppHaptics.light();
+                                // TODO: Open blank reflection page
+                              },
+                              backgroundColor: AlignaColors.accent.withOpacity(
+                                0.9,
+                              ),
+                              tooltip: 'Reflect on your journey',
+                              child: const Icon(
+                                Icons.edit_note,
+                                color: Colors.white,
+                              ),
                             ),
-                            tooltip: 'Tune into healing frequencies',
-                            child: const Icon(Icons.waves, color: Colors.white),
-                          ),
-                          // Vision (Image icon) - with emotional tooltip
-                          FloatingActionButton(
-                            heroTag: 'vision',
-                            onPressed: () async {
-                              await AppHaptics.light();
-                              // TODO: Open user's Vision Board
-                            },
-                            backgroundColor: AlignaColors.gold.withOpacity(0.9),
-                            tooltip: 'Visualize your dreams',
-                            child: const Icon(
-                              Icons.visibility,
-                              color: Colors.white,
+                            FloatingActionButton(
+                              heroTag: 'frequency',
+                              onPressed: () async {
+                                await AppHaptics.light();
+                                // TODO: Open mini-player for 528Hz/432Hz audio
+                              },
+                              backgroundColor:
+                                  AlignaColors.primary.withOpacity(
+                                0.9,
+                              ),
+                              tooltip: 'Tune into healing frequencies',
+                              child:
+                                  const Icon(Icons.waves, color: Colors.white),
                             ),
-                          ),
+                            FloatingActionButton(
+                              heroTag: 'vision',
+                              onPressed: () async {
+                                await AppHaptics.light();
+                                // TODO: Open user's Vision Board
+                              },
+                              backgroundColor:
+                                  AlignaColors.gold.withOpacity(0.9),
+                              tooltip: 'Visualize your dreams',
+                              child: const Icon(
+                                Icons.visibility,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ],
@@ -1318,21 +1367,60 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
       events: events,
     );
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
-      children: [
-        for (final message in messages) ...[
-          CoachBubble(text: message),
-          const SizedBox(height: 10),
-        ],
-        const SizedBox(height: 8),
-        ElevatedButton(
-          onPressed: () {
-            ref.read(app.shellTabIndexProvider.notifier).state = 3;
-          },
-          child: const Text('Choose a journey'),
-        ),
-      ],
+    return FutureBuilder<void>(
+      future: Future<void>.delayed(const Duration(milliseconds: 800)),
+      builder: (context, snapshot) {
+        final showTyping = snapshot.connectionState != ConnectionState.done;
+        final options = const [
+          'Abundance',
+          'Inner Peace',
+          'Love',
+          'Vitality',
+        ];
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+          children: [
+            if (showTyping) ...[
+              const TypingBubble(),
+              const SizedBox(height: 12),
+            ],
+            if (!showTyping)
+              for (final message in messages) ...[
+                CoachBubble(text: message),
+                const SizedBox(height: 10),
+              ],
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final option in options)
+                  _ConsultationChip(
+                    label: option,
+                    selected: _consultationGoals.contains(option),
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      setState(() {
+                        if (_consultationGoals.contains(option)) {
+                          _consultationGoals.remove(option);
+                        } else {
+                          _consultationGoals.add(option);
+                        }
+                      });
+                    },
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: () {
+                ref.read(app.shellTabIndexProvider.notifier).state = 3;
+              },
+              child: const Text('Choose a journey'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -1369,7 +1457,7 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
         "You are $percent% through your shift, $userName! Today's session is ready.",
       );
     } else {
-      messages.add('We’re getting your path ready, $userName.');
+      messages.add("We're getting your path ready, $userName.");
     }
 
     final normalizedGoals = goals ?? const <String>[];
@@ -1408,3 +1496,58 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
     }
   }
 }
+
+class _ConsultationChip extends StatelessWidget {
+  const _ConsultationChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = frequencyColorsFromSelections([label]);
+    final glow = colors.isNotEmpty ? colors.first : Colors.white;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? glow.withOpacity(0.15) : Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.5),
+            width: 0.5,
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: glow.withOpacity(0.4),
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                  ),
+                ]
+              : const [],
+        ),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+      ),
+    );
+  }
+}
+
+
+
+
+
+

@@ -84,9 +84,14 @@ class _GuidanceScreenState extends ConsumerState<GuidanceScreen> {
 
                   return Column(
                     children: [
-                      _FlipCard(
-                        front: _TarotFront(imageUrl: card.imageUrl),
-                        back: const _TarotBack(),
+                      Semantics(
+                        label:
+                            'Your daily guidance card: ${card.cardName}. Tap to reveal the insight.',
+                        button: true,
+                        child: _FlipCard(
+                          front: _TarotFront(imageUrl: card.imageUrl),
+                          back: const _TarotBack(),
+                        ),
                       ),
                       const SizedBox(height: 24),
                       Text(
