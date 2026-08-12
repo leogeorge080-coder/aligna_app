@@ -31,13 +31,17 @@ class CoachBubble extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AlignaColors.surface,
+              color: const Color(0xFF2D2D44),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AlignaColors.border),
+              border: Border.all(color: Colors.white.withOpacity(0.12)),
             ),
             child: Text(
               text,
-              style: const TextStyle(fontSize: 15, height: 1.35),
+              style: const TextStyle(
+                fontSize: 15,
+                height: 1.35,
+                color: Colors.white,
+              ),
             ),
           ),
         ),

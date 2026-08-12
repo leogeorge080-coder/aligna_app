@@ -53,6 +53,12 @@ flutter:
     - assets/coach/
     - assets/icon/
     - assets/shaders/
+    - assets/audio/rituals/
+    - assets/images/home_nebula_bg.webp
+    - assets/images/nebula_gold.webp
+    - assets/images/nebula_pink.webp
+    - assets/images/nebula_green.webp
+    - assets/images/nebula_blue.webp
 flutter_icons:
   android: true
   ios: true

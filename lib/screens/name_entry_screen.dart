@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../providers/app_providers.dart';
 import '../utils/haptics.dart';
+import '../persistence/prefs.dart';
 import 'app_shell.dart';
 
 class NameEntryScreen extends ConsumerStatefulWidget {
@@ -325,6 +326,8 @@ class _NameEntryScreenState extends ConsumerState<NameEntryScreen>
 
       // Update the global name provider
       ref.read(userNameProvider.notifier).state = name;
+      await Prefs.saveUserName(name);
+      await Prefs.saveIsSetupDone(true);
 
       // Navigate to home shell
       if (mounted) {
@@ -338,6 +341,8 @@ class _NameEntryScreenState extends ConsumerState<NameEntryScreen>
 
       // Update provider and continue
       ref.read(userNameProvider.notifier).state = name;
+      await Prefs.saveUserName(name);
+      await Prefs.saveIsSetupDone(true);
 
       if (mounted) {
         Navigator.of(context).pushReplacement(

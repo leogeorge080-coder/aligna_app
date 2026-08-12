@@ -38,6 +38,7 @@ import '../persistence/prefs.dart';
 // UI / theme / utilities
 // ---------------------------------------------
 import '../theme/aligna_theme.dart';
+import '../theme/sanctuary_theme.dart';
 import '../utils/haptics.dart';
 import '../widgets/coach_bubble.dart';
 import '../widgets/typing_bubble.dart';
@@ -93,6 +94,9 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
 
   // Daily refresh timer
   Timer? _dailyRefreshTimer;
+
+  Color get adaptiveTextColor =>
+      themeForState(resolveSanctuaryState(DateTime.now())).adaptiveTextColor;
 
   @override
   void initState() {
@@ -544,6 +548,8 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final adaptiveTextColor =
+        themeForState(resolveSanctuaryState(DateTime.now())).adaptiveTextColor;
     final t = L10n.of(ref);
 
     ref.listen<String?>(app.activeProgramIdProvider, (prev, next) {
@@ -710,7 +716,7 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                                 style: GoogleFonts.playfairDisplay(
                                   fontSize: 32,
                                   fontWeight: FontWeight.w600,
-                                  color: AlignaColors.primary,
+                                  color: adaptiveTextColor,
                                 ),
                               ),
                             ],
@@ -722,7 +728,7 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                           style: GoogleFonts.montserrat(
                             fontSize: 16,
                             fontWeight: FontWeight.w400,
-                            color: AlignaColors.subtext,
+                            color: adaptiveTextColor,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -1239,7 +1245,7 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                         style: GoogleFonts.montserrat(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: AlignaColors.subtext,
+                          color: adaptiveTextColor,
                         ),
                       ),
                       userContextAsync.maybeWhen(
@@ -1254,7 +1260,7 @@ class _CoachHomeScreenState extends ConsumerState<CoachHomeScreen>
                               style: GoogleFonts.montserrat(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
-                                color: AlignaColors.subtext,
+                                color: adaptiveTextColor,
                               ),
                             ),
                           );

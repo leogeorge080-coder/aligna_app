@@ -6,6 +6,9 @@ class Prefs {
   // Core keys
   // ─────────────────────────────────────────────
   static const _kLang = 'aligna_lang';
+  static const _kIsSetupDone = 'aligna_setup_done';
+  static const _kUserName = 'aligna_user_name';
+  static const _kActiveWish = 'aligna_active_wish';
 
   // Mood keys (new window-aware)
   static const _kMood = 'aligna_mood';
@@ -109,6 +112,43 @@ class Prefs {
   static Future<String?> loadLang() async {
     final p = await _sp();
     return p.getString(_kLang);
+  }
+
+  static Future<void> saveIsSetupDone(bool value) async {
+    final p = await _sp();
+    await p.setBool(_kIsSetupDone, value);
+  }
+
+  static Future<bool?> loadIsSetupDone() async {
+    final p = await _sp();
+    return p.getBool(_kIsSetupDone);
+  }
+
+  static Future<void> saveUserName(String name) async {
+    final p = await _sp();
+    await p.setString(_kUserName, name);
+  }
+
+  static Future<String?> loadUserName() async {
+    final p = await _sp();
+    final value = p.getString(_kUserName);
+    return (value == null || value.trim().isEmpty) ? null : value.trim();
+  }
+
+  static Future<void> saveActiveWish(String wish) async {
+    final p = await _sp();
+    await p.setString(_kActiveWish, wish);
+  }
+
+  static Future<String?> loadActiveWish() async {
+    final p = await _sp();
+    final value = p.getString(_kActiveWish);
+    return (value == null || value.trim().isEmpty) ? null : value.trim();
+  }
+
+  static Future<void> clearActiveWish() async {
+    final p = await _sp();
+    await p.remove(_kActiveWish);
   }
 
   /// Optional helper if you want “default English” behaviour:

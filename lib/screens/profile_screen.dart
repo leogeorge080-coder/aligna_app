@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/app_providers.dart';
 import '../providers/user_context_provider.dart';
+import '../theme/sanctuary_theme.dart';
 import 'language_sanctuary_screen.dart';
 import 'settings_screen.dart';
 
@@ -13,6 +14,8 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final userName = ref.watch(userNameProvider) ?? 'Friend';
     final contextAsync = ref.watch(userContextProvider);
+    final adaptiveTextColor =
+        themeForState(resolveSanctuaryState(DateTime.now())).adaptiveTextColor;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
@@ -21,7 +24,10 @@ class ProfileScreen extends ConsumerWidget {
         children: [
           Text(
             'Welcome, $userName',
-            style: Theme.of(context).textTheme.titleLarge,
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(color: adaptiveTextColor),
           ),
           const SizedBox(height: 12),
           contextAsync.maybeWhen(
@@ -30,6 +36,7 @@ class ProfileScreen extends ConsumerWidget {
                 _StatChip(
                   label: 'Streak',
                   value: '${ctx.streakCount} days',
+                  textColor: adaptiveTextColor,
                 ),
                 const SizedBox(width: 8),
                 _StatChip(
@@ -37,6 +44,7 @@ class ProfileScreen extends ConsumerWidget {
                   value: ctx.lastTarotCard == 'neutral'
                       ? 'None yet'
                       : ctx.lastTarotCard,
+                  textColor: adaptiveTextColor,
                 ),
               ],
             ),
@@ -71,10 +79,15 @@ class ProfileScreen extends ConsumerWidget {
 }
 
 class _StatChip extends StatelessWidget {
-  const _StatChip({required this.label, required this.value});
+  const _StatChip({
+    required this.label,
+    required this.value,
+    required this.textColor,
+  });
 
   final String label;
   final String value;
+  final Color textColor;
 
   @override
   Widget build(BuildContext context) {
@@ -90,12 +103,18 @@ class _StatChip extends StatelessWidget {
         children: [
           Text(
             label,
-            style: Theme.of(context).textTheme.labelSmall,
+            style: Theme.of(context)
+                .textTheme
+                .labelSmall
+                ?.copyWith(color: textColor),
           ),
           const SizedBox(height: 2),
           Text(
             value,
-            style: Theme.of(context).textTheme.labelLarge,
+            style: Theme.of(context)
+                .textTheme
+                .labelLarge
+                ?.copyWith(color: textColor),
           ),
         ],
       ),

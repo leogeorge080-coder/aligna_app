@@ -24,6 +24,10 @@ final shellTabIndexProvider = StateProvider<int>(
   (ref) => 0,
 ); // 0 Home, 1 Guide, 2 Coach, 3 Programs, 4 Profile
 
+final showBottomNavProvider = StateProvider<bool>(
+  (ref) => true,
+);
+
 final localeProvider = Provider<Locale>((ref) {
   final lang = ref.watch(languageProvider);
   return switch (lang) {

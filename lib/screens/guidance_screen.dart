@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../providers/user_context_provider.dart';
 import '../services/tarot_service.dart';
 import '../theme/aligna_theme.dart';
+import '../theme/sanctuary_theme.dart';
 
 class GuidanceScreen extends ConsumerStatefulWidget {
   const GuidanceScreen({super.key});
@@ -27,6 +28,8 @@ class _GuidanceScreenState extends ConsumerState<GuidanceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final adaptiveTextColor =
+        themeForState(resolveSanctuaryState(DateTime.now())).adaptiveTextColor;
     return Scaffold(
       backgroundColor: AlignaColors.bg,
       body: SafeArea(
@@ -50,7 +53,7 @@ class _GuidanceScreenState extends ConsumerState<GuidanceScreen> {
                 style: GoogleFonts.montserrat(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
-                  color: AlignaColors.subtext,
+                  color: adaptiveTextColor,
                 ),
               ),
               const SizedBox(height: 24),

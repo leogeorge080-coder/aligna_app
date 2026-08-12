@@ -29,9 +29,9 @@ class TypingBubble extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: AlignaColors.surface,
+              color: const Color(0xFF2D2D44),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AlignaColors.border),
+              border: Border.all(color: Colors.white.withOpacity(0.12)),
             ),
             child: const _Dots(),
           ),
@@ -74,7 +74,7 @@ class _DotsState extends State<_Dots> with SingleTickerProviderStateMixin {
         return Text(
           'Typing$dots',
           style: const TextStyle(
-            color: AlignaColors.subtext,
+            color: Colors.white70,
             fontWeight: FontWeight.w600,
           ),
         );

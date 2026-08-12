@@ -25,6 +25,7 @@ class AlignaBootstrapScreen extends ConsumerStatefulWidget {
 
 class _AlignaBootstrapScreenState extends ConsumerState<AlignaBootstrapScreen> {
   bool _loaded = false;
+  bool? _isSetupDone;
 
   @override
   void initState() {
@@ -33,8 +34,14 @@ class _AlignaBootstrapScreenState extends ConsumerState<AlignaBootstrapScreen> {
   }
 
   Future<void> _bootstrap() async {
+    final isSetupDone = await Prefs.loadIsSetupDone();
+    _isSetupDone = isSetupDone;
+
     // 1) Language: load from prefs first, then check Supabase
     String? lang = await Prefs.loadLang();
+    if (isSetupDone == true && (lang == null || lang.trim().isEmpty)) {
+      lang = await Prefs.ensureLangOrDefaultEnglish();
+    }
 
     // 2) Load user profile data from Supabase if authenticated
     final user = Supabase.instance.client.auth.currentUser;
@@ -57,6 +64,13 @@ class _AlignaBootstrapScreenState extends ConsumerState<AlignaBootstrapScreen> {
         }
       } catch (e) {
         // Handle error silently - will fall back to prefs/local data
+      }
+    }
+
+    if (ref.read(userNameProvider) == null) {
+      final storedName = await Prefs.loadUserName();
+      if (storedName != null) {
+        ref.read(userNameProvider.notifier).state = storedName;
       }
     }
 
@@ -141,7 +155,7 @@ class _AlignaBootstrapScreenState extends ConsumerState<AlignaBootstrapScreen> {
     final userName = ref.watch(userNameProvider);
     final mood = ref.watch(moodProvider);
     final onboardingCompleted = ref.watch(onboardingCompletedProvider);
-
+    if (_isSetupDone == true) return const AppShell();
     if (lang == null) return const LanguageSanctuaryScreen();
     if (userName == null) return const NameEntryScreen();
     if (!onboardingCompleted) return const OnboardingQuizScreen();

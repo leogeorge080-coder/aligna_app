@@ -6,6 +6,7 @@ import '../models/program.dart';
 import '../persistence/prefs.dart';
 import '../providers/app_providers.dart';
 import '../services/program_service.dart';
+import '../theme/sanctuary_theme.dart';
 
 class ProgramsScreen extends ConsumerStatefulWidget {
   const ProgramsScreen({super.key});
@@ -28,12 +29,17 @@ class _ProgramsScreenState extends ConsumerState<ProgramsScreen> {
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
     final textScale = media.textScaleFactor.clamp(1.0, 1.1);
+    final adaptiveTextColor =
+        themeForState(resolveSanctuaryState(DateTime.now())).adaptiveTextColor;
 
     return MediaQuery(
       data: media.copyWith(textScaleFactor: textScale),
       child: Scaffold(
       appBar: AppBar(
-        title: const Text('Programs'),
+        title: Text(
+          'Programs',
+          style: TextStyle(color: adaptiveTextColor),
+        ),
         actions: [
           IconButton(
             tooltip: 'Refresh',
@@ -53,7 +59,10 @@ class _ProgramsScreenState extends ConsumerState<ProgramsScreen> {
           if (snap.hasError) {
             return Padding(
               padding: const EdgeInsets.all(16),
-              child: Text('Catalogue load failed: ${snap.error}'),
+              child: Text(
+                'Catalogue load failed: ${snap.error}',
+                style: TextStyle(color: adaptiveTextColor),
+              ),
             );
           }
 
@@ -135,6 +144,7 @@ class _ProgramsScreenState extends ConsumerState<ProgramsScreen> {
                 _ActiveProgramCard(
                   active: active,
                   activeId: activeId,
+                  adaptiveTextColor: adaptiveTextColor,
                   onResume: () =>
                       ref.read(shellTabIndexProvider.notifier).state = 2,
                   onClear: () async {
@@ -169,7 +179,10 @@ class _ProgramsScreenState extends ConsumerState<ProgramsScreen> {
                   padding: const EdgeInsets.only(top: 24),
                   child: Text(
                     'No programs in this track yet.',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: adaptiveTextColor),
                   ),
                 ),
 
@@ -202,12 +215,14 @@ class _ActiveProgramCard extends StatelessWidget {
   const _ActiveProgramCard({
     required this.active,
     required this.activeId,
+    required this.adaptiveTextColor,
     required this.onResume,
     required this.onClear,
   });
 
   final Program? active;
   final String activeId;
+  final Color adaptiveTextColor;
   final VoidCallback onResume;
   final VoidCallback onClear;
 
@@ -227,17 +242,28 @@ class _ActiveProgramCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
+          Text(
             'Active',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: adaptiveTextColor,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: adaptiveTextColor,
+            ),
           ),
           const SizedBox(height: 8),
-          Text(sub),
+          Text(
+            sub,
+            style: TextStyle(color: adaptiveTextColor),
+          ),
           const SizedBox(height: 12),
           Row(
             children: [

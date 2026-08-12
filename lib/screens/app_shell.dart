@@ -17,6 +17,7 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final index = ref.watch(shellTabIndexProvider);
+    final showNav = ref.watch(showBottomNavProvider) && index != 0;
 
     return Scaffold(
       body: IndexedStack(
@@ -29,49 +30,52 @@ class AppShell extends ConsumerWidget {
           ProfileScreen(),
         ],
       ),
-      bottomNavigationBar: Theme(
-        data: Theme.of(context).copyWith(
-          navigationBarTheme: NavigationBarThemeData(
-            labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((
-              Set<WidgetState> states,
-            ) {
-              if (states.contains(WidgetState.selected)) {
-                return GoogleFonts.montserrat(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AlignaColors.radiantGold,
-                );
-              }
-              return GoogleFonts.montserrat(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: AlignaColors.subtext,
-              );
-            }),
-          ),
-        ),
-        child: NavigationBar(
-          selectedIndex: index,
-          onDestinationSelected: (i) =>
-              ref.read(shellTabIndexProvider.notifier).state = i,
-          destinations: const [
-            NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
-            NavigationDestination(
-              icon: Icon(Icons.auto_awesome),
-              label: 'Guide',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.chat_bubble_outline),
-              label: 'Coach',
-            ),
-            NavigationDestination(icon: Icon(Icons.list), label: 'Programs'),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              label: 'Profile',
-            ),
-          ],
-        ),
-      ),
+      bottomNavigationBar: showNav
+          ? Theme(
+              data: Theme.of(context).copyWith(
+                navigationBarTheme: NavigationBarThemeData(
+                  labelTextStyle:
+                      WidgetStateProperty.resolveWith<TextStyle>((
+                    Set<WidgetState> states,
+                  ) {
+                    if (states.contains(WidgetState.selected)) {
+                      return GoogleFonts.montserrat(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AlignaColors.radiantGold,
+                      );
+                    }
+                    return GoogleFonts.montserrat(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: AlignaColors.subtext,
+                    );
+                  }),
+                ),
+              ),
+              child: NavigationBar(
+                selectedIndex: index,
+                onDestinationSelected: (i) =>
+                    ref.read(shellTabIndexProvider.notifier).state = i,
+                destinations: const [
+                  NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
+                  NavigationDestination(
+                    icon: Icon(Icons.auto_awesome),
+                    label: 'Guide',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.chat_bubble_outline),
+                    label: 'Coach',
+                  ),
+                  NavigationDestination(icon: Icon(Icons.list), label: 'Programs'),
+                  NavigationDestination(
+                    icon: Icon(Icons.person_outline),
+                    label: 'Profile',
+                  ),
+                ],
+              ),
+            )
+          : null,
     );
   }
 }
